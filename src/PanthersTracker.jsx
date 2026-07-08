@@ -326,26 +326,28 @@ function getPrimaryPosition(posCounts) {
   return best;
 }
 
-function StatLeaderCard({ label, statKey, ranked, fmt }) {
+function StatLeaderCard({ label, statKey, ranked, fmt, onViewPlayer }) {
   const leader = ranked[0];
   const rest = ranked.slice(1, 4);
   if (!leader) return null;
   return (
     <div style={{ background: `linear-gradient(135deg, #000000, ${BLUE_DK})`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
         <div>
           <div style={{ color: "rgba(255,255,255,0.75)", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
           <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 34, lineHeight: 1.1, marginTop: 2 }}>{fmt(leader[statKey])}</div>
-          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600, marginTop: 4 }}>{leader.name}</div>
+          <div style={{ marginTop: 4 }}>
+            <PlayerLink name={leader.name} onViewPlayer={onViewPlayer} style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 600 }}>{leader.name}</PlayerLink>
+          </div>
           <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 11.5 }}>{leader.primaryPos ? `${leader.primaryPos} · ` : ""}{leader.jersey}</div>
         </div>
-        <PlayerAvatar player={leader} size={56} />
+        <PlayerAvatar player={leader} size={168} />
       </div>
       <div style={{ background: "#fff", padding: "6px 6px" }}>
         {rest.map((p) => (
           <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px" }}>
             <PlayerAvatar player={p} size={26} />
-            <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK }}>{p.name}</div>
+            <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}><PlayerLink name={p.name} onViewPlayer={onViewPlayer} style={{ color: INK }}>{p.name}</PlayerLink></div>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 700, color: NAVY }}>{fmt(p[statKey])}</div>
           </div>
         ))}
@@ -355,7 +357,84 @@ function StatLeaderCard({ label, statKey, ranked, fmt }) {
   );
 }
 
-function TeamLeadersSection({ battingCalc, fielding }) {
+function StandingsSection() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/standings");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setData(json);
+    } catch (e) {
+      setError((e && e.message) || "Couldn't load standings.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, padding: 20, marginTop: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+        <SectionHeading icon={Trophy}>League Standings</SectionHeading>
+        <button onClick={load} style={ghostBtnStyle}><RotateCcw size={13} /> Refresh</button>
+      </div>
+      {loading && <div style={{ color: "#8A8F98", fontSize: 13 }}>Loading standings…</div>}
+      {error && (
+        <div style={{ color: "#000", fontSize: 13 }}>
+          {error} — <a href="https://icbabaseball.ca/Rounds/31986/2026_8_and_Under_T1_Regular_Season/" target="_blank" rel="noreferrer" style={{ color: BLUE_DK }}>view on league site</a>
+        </div>
+      )}
+      {data && data.teams && data.teams.length > 0 && (
+        <>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 640 }}>
+            <thead>
+              <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
+                <th style={{ padding: "6px 8px", textAlign: "left" }}>Team</th>
+                <th style={{ padding: "6px 6px" }}>GP</th>
+                <th style={{ padding: "6px 6px" }}>W</th>
+                <th style={{ padding: "6px 6px" }}>L</th>
+                <th style={{ padding: "6px 6px" }}>T</th>
+                <th style={{ padding: "6px 6px" }}>Pts</th>
+                <th style={{ padding: "6px 6px" }}>W %</th>
+                <th style={{ padding: "6px 6px" }}>L10</th>
+                <th style={{ padding: "6px 6px" }}>Strk</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.teams.map((t, i) => {
+                const isPanthers = (t.team || "").toLowerCase().includes("kitchener");
+                return (
+                  <tr key={i} style={{ borderTop: "1px solid #E7E7E7", background: isPanthers ? "#EEF3F8" : "transparent" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: isPanthers ? 700 : 500 }}>{t.team}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.gp}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.w}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.l}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.t}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right", fontWeight: 700 }}>{t.pts}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.winPct}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right", color: "#8A8F98" }}>{t.l10}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right", color: "#8A8F98" }}>{t.streak}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ fontSize: 11, color: "#B0B5BC", marginTop: 8 }}>
+            From the ICBA 8U T1 Regular Season standings{data.updatedAt ? ` · fetched ${new Date(data.updatedAt).toLocaleString()}` : ""}.
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TeamLeadersSection({ battingCalc, fielding, onViewPlayer }) {
   const enriched = useMemo(() => battingCalc.map((p) => ({
     ...p,
     photoUrl: p.photoUrl,
@@ -380,7 +459,7 @@ function TeamLeadersSection({ battingCalc, fielding }) {
       </div>
       {groups.map((row, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
-          {row.map((s) => <StatLeaderCard key={s.key} label={s.label} statKey={s.key} fmt={s.fmt} ranked={rankedBy(s.key)} />)}
+          {row.map((s) => <StatLeaderCard key={s.key} label={s.label} statKey={s.key} fmt={s.fmt} ranked={rankedBy(s.key)} onViewPlayer={onViewPlayer} />)}
         </div>
       ))}
     </div>
@@ -436,7 +515,21 @@ function SectionHeading({ children, icon: Icon }) {
 
 /* ======================== DASHBOARD TAB ======================== */
 
-function DashboardTab({ games, batting, roster }) {
+function jerseyNum(jersey) {
+  return parseInt(String(jersey || "").replace("#", ""), 10) || 0;
+}
+
+function PlayerLink({ name, onViewPlayer, children, style }) {
+  return (
+    <span onClick={() => onViewPlayer && onViewPlayer(name)} style={{ cursor: onViewPlayer ? "pointer" : "default", color: onViewPlayer ? BLUE_DK : "inherit", textDecoration: onViewPlayer ? "none" : "none", ...style }}
+      onMouseEnter={(e) => { if (onViewPlayer) e.currentTarget.style.textDecoration = "underline"; }}
+      onMouseLeave={(e) => { if (onViewPlayer) e.currentTarget.style.textDecoration = "none"; }}>
+      {children}
+    </span>
+  );
+}
+
+function DashboardTab({ games, batting, roster, onViewPlayer }) {
   const [typeFilter, setTypeFilter] = useState(["Regular Season"]);
   const filteredGames = useMemo(
     () => games.filter((g) => typeFilter.includes(g.gameType || "Regular Season")),
@@ -449,6 +542,8 @@ function DashboardTab({ games, batting, roster }) {
   }, [batting, roster]);
   const [sortKey, setSortKey] = useState("AVG");
   const [sortDir, setSortDir] = useState(-1);
+  const [fieldSortKey, setFieldSortKey] = useState("jerseyNum");
+  const [fieldSortDir, setFieldSortDir] = useState(1);
 
   function toggleType(t) {
     setTypeFilter((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
@@ -460,13 +555,28 @@ function DashboardTab({ games, batting, roster }) {
     return arr;
   }, [battingCalc, sortKey, sortDir]);
 
+  const fieldingRows = useMemo(() => roster.map((p) => {
+    const r = fielding[p.name];
+    return { jersey: p.jersey, name: p.name, jerseyNum: jerseyNum(p.jersey), ...r };
+  }), [roster, fielding]);
+
+  const sortedFielding = useMemo(() => {
+    const arr = [...fieldingRows];
+    arr.sort((a, b) => {
+      const av = a[fieldSortKey], bv = b[fieldSortKey];
+      if (typeof av === "string") return av.localeCompare(bv) * fieldSortDir;
+      return ((av || 0) - (bv || 0)) * fieldSortDir;
+    });
+    return arr;
+  }, [fieldingRows, fieldSortKey, fieldSortDir]);
+
+  function fieldHeaderClick(key) {
+    if (fieldSortKey === key) setFieldSortDir((d) => -d);
+    else { setFieldSortKey(key); setFieldSortDir(key === "jerseyNum" || key === "name" ? 1 : -1); }
+  }
+
   const gamesPlayed = games.length;
   const lastGame = games[games.length - 1];
-  const teamAB = batting.reduce((s, p) => s + (Number(p.AB) || 0), 0);
-  const teamH = batting.reduce((s, p) => s + (Number(p.H) || 0), 0);
-  const teamAvg = teamAB ? teamH / teamAB : 0;
-  const topHitter = battingCalc[0];
-  const mostBalanced = Object.values(fielding).reduce((best, r) => (Math.abs(r.deviation) < Math.abs(best.deviation) ? r : best), Object.values(fielding)[0] || {});
 
   function headerClick(key) {
     if (sortKey === key) setSortDir((d) => -d);
@@ -498,13 +608,6 @@ function DashboardTab({ games, batting, roster }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-        <StatCard label="Team Batting Avg" value={fmtAvg(teamAvg)} sub={`${teamH} hits / ${teamAB} AB`} accent={GOLD} />
-        <StatCard label="Top Hitter" value={topHitter ? topHitter.name.split(" ")[0] + " " + topHitter.name.split(" ")[1][0] + "." : "—"} sub={topHitter ? `${fmtAvg(topHitter.AVG)} AVG` : ""} accent={FIELD_GREEN} />
-        <StatCard label="Most Balanced" value={mostBalanced ? mostBalanced.name.split(" ")[0] : "—"} sub={mostBalanced ? `${mostBalanced.balance >= 0 ? "+" : ""}${mostBalanced.balance} IF/OF` : ""} accent={INF_BLUE} />
-        <StatCard label="Target Split" value="60/40" sub="IF / OF innings" accent={SIT_GRAY} />
-      </div>
-
       <div style={{ background: "#fff", borderRadius: 12, padding: 20, marginBottom: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
           <SectionHeading icon={LayoutDashboard}>Fielding Summary</SectionHeading>
@@ -523,40 +626,47 @@ function DashboardTab({ games, batting, roster }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 1180 }}>
           <thead>
             <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-              <th style={{ padding: "6px 6px", textAlign: "left" }}>#</th>
-              <th style={{ padding: "6px 6px", textAlign: "left" }}>Player</th>
-              {OUTFIELD.map((pos) => <th key={pos} style={{ padding: "6px 5px" }}>{pos}</th>)}
-              {INFIELD.map((pos) => <th key={pos} style={{ padding: "6px 5px" }}>{pos}</th>)}
-              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>OF Total</th>
-              <th style={{ padding: "6px 6px" }}>OF %</th>
-              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>IF Total</th>
-              <th style={{ padding: "6px 6px" }}>IF %</th>
-              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>Balance</th>
-              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>SIT</th>
-              <th style={{ padding: "6px 6px" }}>SIT %</th>
-              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>Total</th>
+              <th onClick={() => fieldHeaderClick("jerseyNum")} style={{ padding: "6px 6px", textAlign: "left", cursor: "pointer", userSelect: "none", position: "sticky", left: 0, background: "#fff", width: 40, zIndex: 2 }}>
+                # {fieldSortKey === "jerseyNum" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}
+              </th>
+              <th onClick={() => fieldHeaderClick("name")} style={{ padding: "6px 6px", textAlign: "left", cursor: "pointer", userSelect: "none", position: "sticky", left: 40, background: "#fff", minWidth: 140, zIndex: 2, boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>
+                Player {fieldSortKey === "name" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}
+              </th>
+              {OUTFIELD.map((pos) => (
+                <th key={pos} onClick={() => fieldHeaderClick(pos)} style={{ padding: "6px 5px", cursor: "pointer", userSelect: "none" }}>{pos} {fieldSortKey === pos ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              ))}
+              {INFIELD.map((pos) => (
+                <th key={pos} onClick={() => fieldHeaderClick(pos)} style={{ padding: "6px 5px", cursor: "pointer", userSelect: "none" }}>{pos} {fieldSortKey === pos ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              ))}
+              <th onClick={() => fieldHeaderClick("of")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>OF Total {fieldSortKey === "of" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("ofPct")} style={{ padding: "6px 6px", cursor: "pointer", userSelect: "none" }}>OF % {fieldSortKey === "ofPct" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("if")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>IF Total {fieldSortKey === "if" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("ifPct")} style={{ padding: "6px 6px", cursor: "pointer", userSelect: "none" }}>IF % {fieldSortKey === "ifPct" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("deviation")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>Balance {fieldSortKey === "deviation" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("sit")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>SIT {fieldSortKey === "sit" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("sitPct")} style={{ padding: "6px 6px", cursor: "pointer", userSelect: "none" }}>SIT % {fieldSortKey === "sitPct" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("total")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>Total {fieldSortKey === "total" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
             </tr>
           </thead>
           <tbody>
-            {roster.map((p) => {
-              const r = fielding[p.name];
-              return (
-                <tr key={p.name} style={{ borderTop: "1px solid #E7E7E7" }}>
-                  <td style={{ padding: "7px 6px", color: "#8A8F98" }}>{p.jersey}</td>
-                  <td style={{ padding: "7px 6px", fontWeight: 600, color: INK, whiteSpace: "nowrap" }}>{p.name}</td>
-                  {OUTFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
-                  {INFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
-                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.of}</td>
-                  <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ofPct * 100)}%</td>
-                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.if}</td>
-                  <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ifPct * 100)}%</td>
-                  <td style={{ padding: "7px 6px", borderLeft: "1px solid #E7E7E7" }}><BalanceChip dev={r.deviation} balance={r.balance} /></td>
-                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", color: "#8A8F98" }}>{r.sit}</td>
-                  <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.sitPct * 100)}%</td>
-                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.total}</td>
-                </tr>
-              );
-            })}
+            {sortedFielding.map((r) => (
+              <tr key={r.name} style={{ borderTop: "1px solid #E7E7E7" }}>
+                <td style={{ padding: "7px 6px", color: "#8A8F98", position: "sticky", left: 0, background: "#fff" }}>{r.jersey}</td>
+                <td style={{ padding: "7px 6px", fontWeight: 600, color: INK, whiteSpace: "nowrap", position: "sticky", left: 40, background: "#fff", boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>
+                  <PlayerLink name={r.name} onViewPlayer={onViewPlayer}>{r.name}</PlayerLink>
+                </td>
+                {OUTFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
+                {INFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.of}</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ofPct * 100)}%</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.if}</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ifPct * 100)}%</td>
+                <td style={{ padding: "7px 6px", borderLeft: "1px solid #E7E7E7" }}><BalanceChip dev={r.deviation} balance={r.balance} /></td>
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", color: "#8A8F98" }}>{r.sit}</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.sitPct * 100)}%</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.total}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
         <div style={{ fontSize: 11.5, color: "#8A8F98", marginTop: 10 }}>
@@ -572,8 +682,8 @@ function DashboardTab({ games, batting, roster }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 900 }}>
           <thead>
             <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              <th style={{ padding: "6px 8px", textAlign: "left" }}>#</th>
-              <th style={{ padding: "6px 8px", textAlign: "left" }}>Player</th>
+              <th style={{ padding: "6px 8px", textAlign: "left", position: "sticky", left: 0, background: "#fff", width: 40, zIndex: 2 }}>#</th>
+              <th style={{ padding: "6px 8px", textAlign: "left", position: "sticky", left: 40, background: "#fff", minWidth: 140, zIndex: 2, boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>Player</th>
               <th style={{ padding: "6px 8px" }}>GP</th>
               <th style={{ padding: "6px 8px" }}>AB</th>
               {cols.map(([key, label]) => (
@@ -586,8 +696,10 @@ function DashboardTab({ games, batting, roster }) {
           <tbody>
             {sortedBatting.map((p) => (
               <tr key={p.name} style={{ borderTop: "1px solid #E7E7E7" }}>
-                <td style={{ padding: "8px", color: "#8A8F98" }}>{p.jersey}</td>
-                <td style={{ padding: "8px", fontWeight: 600 }}>{p.name}</td>
+                <td style={{ padding: "8px", color: "#8A8F98", position: "sticky", left: 0, background: "#fff" }}>{p.jersey}</td>
+                <td style={{ padding: "8px", fontWeight: 600, position: "sticky", left: 40, background: "#fff", boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>
+                  <PlayerLink name={p.name} onViewPlayer={onViewPlayer}>{p.name}</PlayerLink>
+                </td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{p.GP}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{p.AB}</td>
                 <td style={{ padding: "8px", textAlign: "right", fontWeight: 700, color: NAVY }}>{fmtAvg(p.AVG)}</td>
@@ -609,7 +721,8 @@ function DashboardTab({ games, batting, roster }) {
         </table>
       </div>
 
-      <TeamLeadersSection battingCalc={battingCalc} fielding={fielding} />
+      <TeamLeadersSection battingCalc={battingCalc} fielding={fielding} onViewPlayer={onViewPlayer} />
+      <StandingsSection />
     </div>
   );
 }
@@ -624,6 +737,7 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
     { name: "Outfield", value: r.of, color: FIELD_GREEN },
     { name: "Bench", value: r.sit, color: SIT_GRAY },
   ].filter((d) => d.value > 0);
+  const pieTotal = pieData.reduce((s, d) => s + d.value, 0);
 
   const posBarData = ALL_POS.map((pos) => ({ pos, innings: r.posCounts[pos] || 0 })).filter((d) => d.innings > 0);
   const b = battingRow ? computeBatting([battingRow])[0] : null;
@@ -649,42 +763,61 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
     return { ...g, positions, played };
   });
 
+  const battingFieldsRow1 = ["GP", "AB", "AVG", "OBP", "OPS", "SLG", "H"];
+  const battingFieldsRow2 = ["1B", "2B", "3B", "HR", "RBI", "R", "SO", "FC"];
+  function battingChip(k) {
+    const isAvgStat = k === "AVG" || k === "OBP" || k === "OPS" || k === "SLG";
+    const v = b ? (isAvgStat ? fmtAvg(b[k]) : (b[k] != null ? b[k] : 0)) : (isAvgStat ? fmtAvg(0) : 0);
+    return (
+      <div key={k} style={{ background: PAPER, borderRadius: 8, padding: "8px 12px", minWidth: 56, textAlign: "center" }}>
+        <div style={{ fontSize: 10, color: "#8A8F98", textTransform: "uppercase", fontWeight: 700 }}>{k}</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, color: NAVY, fontWeight: 600 }}>{v}</div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: "#fff", borderRadius: 12, padding: 22, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+      <style>{`@media print { .no-print { display: none !important; } }`}</style>
+      <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <button onClick={() => window.print()} style={primaryBtnStyle}><Printer size={15} /> Print / Export PDF</button>
+      </div>
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ position: "relative", width: 256, height: 256, flexShrink: 0 }}>
             {player.photoUrl ? (
-              <img src={player.photoUrl} alt={player.name} style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: `2px solid ${NAVY}` }} />
+              <img src={player.photoUrl} alt={player.name} style={{ width: 256, height: 256, borderRadius: "50%", objectFit: "cover" }} />
             ) : (
-              <div style={{ width: 64, height: 64, borderRadius: "50%", background: PAPER, border: `2px dashed #D5D5D5`, display: "flex", alignItems: "center", justifyContent: "center", color: "#B0B5BC", fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 700 }}>
+              <div style={{ width: 256, height: 256, borderRadius: "50%", background: PAPER, border: `2px dashed #D5D5D5`, display: "flex", alignItems: "center", justifyContent: "center", color: "#B0B5BC", fontFamily: "'Oswald', sans-serif", fontSize: 64, fontWeight: 700 }}>
                 {player.name.split(" ").map((w) => w[0]).join("")}
               </div>
             )}
             {onUploadPhoto && (
-              <button onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
-                position: "absolute", bottom: -2, right: -2, width: 22, height: 22, borderRadius: "50%", background: BLUE, border: "2px solid #fff",
+              <button className="no-print" onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
+                position: "absolute", bottom: 10, right: 10, width: 40, height: 40, borderRadius: "50%", background: BLUE, border: "3px solid #fff",
                 display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff"
               }}>
-                {uploading ? <Loader2 size={11} className="spin" /> : <PlusCircle size={11} />}
+                {uploading ? <Loader2 size={18} className="spin" /> : <PlusCircle size={18} />}
               </button>
             )}
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} />
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
           </div>
           <div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 12 }}>{player.jersey} · KITCHENER PANTHERS</div>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 28, color: NAVY, fontWeight: 700 }}>{player.name}</div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 13 }}>{player.jersey} · KITCHENER PANTHERS</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 34, color: NAVY, fontWeight: 700 }}>{player.name}</div>
           </div>
         </div>
         <BalanceChip dev={r.deviation} balance={r.balance} />
       </div>
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
-        <div style={{ flex: "1 1 220px", minWidth: 220 }}>
+        <div style={{ flex: "1 1 260px", minWidth: 260 }}>
           <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 6, fontWeight: 600 }}>Fielding Breakdown</div>
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={70} paddingAngle={2}>
+              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={70} paddingAngle={2} labelLine={false}
+                label={({ value }) => `${value} (${pieTotal ? Math.round((value / pieTotal) * 100) : 0}%)`}>
                 {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
               </Pie>
               <Tooltip />
@@ -693,7 +826,7 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
         </div>
         <div style={{ flex: "1 1 300px", minWidth: 260 }}>
           <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 6, fontWeight: 600 }}>Innings by Position</div>
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={posBarData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E7E7E7" />
               <XAxis dataKey="pos" tick={{ fontSize: 11 }} />
@@ -707,19 +840,15 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
         </div>
       </div>
 
-      {b && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[["AVG", fmtAvg(b.AVG)], ["OBP", fmtAvg(b.OBP)], ["OPS", fmtAvg(b.OPS)], ["SLG", fmtAvg(b.SLG)], ["H", b.H], ["AB", b.AB], ["RBI", b.RBI], ["R", b.R], ["SO", b.SO]].map(([k, v]) => (
-              <div key={k} style={{ background: PAPER, borderRadius: 8, padding: "8px 14px", minWidth: 62, textAlign: "center" }}>
-                <div style={{ fontSize: 10, color: "#8A8F98", textTransform: "uppercase", fontWeight: 700 }}>{k}</div>
-                <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 18, color: NAVY, fontWeight: 600 }}>{v}</div>
-              </div>
-            ))}
-          </div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+          {battingFieldsRow1.map(battingChip)}
         </div>
-      )}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {battingFieldsRow2.map(battingChip)}
+        </div>
+      </div>
 
       <div>
         <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Game Log</div>
@@ -756,15 +885,23 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
   );
 }
 
-function PlayersTab({ games, batting, roster, onUploadPhoto }) {
+function PlayersTab({ games, batting, roster, onUploadPhoto, initialPlayerName, onConsumeInitialPlayer }) {
   const [selected, setSelected] = useState(null);
   const { rows: fielding } = useMemo(() => computeFielding(games, roster), [games, roster]);
   const battingByName = useMemo(() => Object.fromEntries(batting.map((b) => [b.name, b])), [batting]);
 
+  useEffect(() => {
+    if (initialPlayerName) {
+      const found = roster.find((p) => p.name === initialPlayerName);
+      if (found) setSelected(found);
+      if (onConsumeInitialPlayer) onConsumeInitialPlayer();
+    }
+  }, [initialPlayerName, roster]);
+
   if (selected) {
     return (
       <div>
-        <button onClick={() => setSelected(null)} style={{
+        <button className="no-print" onClick={() => setSelected(null)} style={{
           display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: NAVY, fontWeight: 600,
           cursor: "pointer", marginBottom: 14, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, padding: 0
         }}>
@@ -1537,116 +1674,6 @@ function BattingTab({ batting, roster, onSave }) {
   );
 }
 
-/* ======================== REPORTS TAB ======================== */
-
-function ReportsTab({ games, batting, roster }) {
-  const [selectedName, setSelectedName] = useState(roster[0].name);
-  const player = roster.find((p) => p.name === selectedName) || roster[0];
-  const { rows: fielding } = useMemo(() => computeFielding(games, roster), [games, roster]);
-  const r = fielding[selectedName];
-  const battingRow = batting.find((b) => b.name === selectedName);
-  const b = battingRow ? computeBatting([battingRow])[0] : null;
-  const gameLog = games.map((g) => {
-    const entry = g.players[selectedName];
-    const positions = (entry && entry.positions) || [];
-    return { ...g, positions, played: positions.some((v) => !!v) };
-  });
-  const pieData = [
-    { name: "Infield", value: r.if, color: INF_BLUE },
-    { name: "Outfield", value: r.of, color: FIELD_GREEN },
-    { name: "Bench", value: r.sit, color: SIT_GRAY },
-  ].filter((d) => d.value > 0);
-
-  return (
-    <div>
-      <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
-        <SectionHeading icon={FileText}>Player Report</SectionHeading>
-        <div style={{ display: "flex", gap: 10 }}>
-          <select value={selectedName} onChange={(e) => setSelectedName(e.target.value)} style={{ ...inputStyle, width: 200 }}>
-            {roster.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
-          </select>
-          <button onClick={() => window.print()} style={primaryBtnStyle}><Printer size={15} /> Print / Save as PDF</button>
-        </div>
-      </div>
-
-      <div id="print-area" style={{ background: "#fff", borderRadius: 12, padding: 30, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 780, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `3px solid ${GOLD}`, paddingBottom: 16, marginBottom: 20 }}>
-          <div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.1em", fontSize: 12 }}>KITCHENER PANTHERS · 2026 U8 TIER 1</div>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 32, color: NAVY, fontWeight: 700 }}>{player.name}</div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 26, color: NAVY, fontWeight: 700 }}>{player.jersey}</div>
-            <div style={{ fontSize: 11, color: "#8A8F98" }}>{games.length} games this season</div>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
-          {b && [["AVG", fmtAvg(b.AVG)], ["OBP", fmtAvg(b.OBP)], ["OPS", fmtAvg(b.OPS)], ["SLG", fmtAvg(b.SLG)], ["H", b.H], ["RBI", b.RBI], ["R", b.R]].map(([k, v]) => (
-            <div key={k} style={{ background: PAPER, borderRadius: 8, padding: "10px 14px", minWidth: 60, textAlign: "center", flex: "1 1 60px" }}>
-              <div style={{ fontSize: 10, color: "#8A8F98", textTransform: "uppercase", fontWeight: 700 }}>{k}</div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 19, color: NAVY, fontWeight: 600 }}>{v}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 22 }}>
-          <div style={{ flex: "1 1 220px" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 6, fontWeight: 700 }}>Fielding Split</div>
-            <ResponsiveContainer width="100%" height={160}>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={38} outerRadius={62} paddingAngle={2}>
-                  {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Pie>
-                <Tooltip />
-                <Legend iconSize={9} wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div style={{ flex: "1 1 220px" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 6, fontWeight: 700 }}>Season Balance</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
-              <div>Infield innings: <b>{r.if}</b></div>
-              <div>Outfield innings: <b>{r.of}</b></div>
-              <div>Bench innings: <b>{r.sit}</b></div>
-              <div style={{ marginTop: 4 }}><BalanceChip dev={r.deviation} balance={r.balance} /></div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 700 }}>Full Game Log</div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
-            <thead>
-              <tr style={{ textAlign: "left", color: "#8A8F98", fontSize: 10, textTransform: "uppercase" }}>
-                <th style={{ padding: "4px 5px" }}>#</th><th style={{ padding: "4px 5px" }}>Date</th><th style={{ padding: "4px 5px" }}>Opponent</th>
-                {[1,2,3,4,5,6,7].map((n) => <th key={n} style={{ padding: "4px 4px", textAlign: "center" }}>I{n}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {gameLog.map((g) => (
-                <tr key={g.gameNum} style={{ borderTop: "1px solid #E7E7E7" }}>
-                  <td style={{ padding: "4px 5px", color: "#8A8F98" }}>{g.gameNum}</td>
-                  <td style={{ padding: "4px 5px" }}>{g.date}</td>
-                  <td style={{ padding: "4px 5px" }}>{g.opponent}</td>
-                  {!g.played ? (
-                    <td colSpan={7} style={{ padding: "4px 5px", textAlign: "center", color: "#B0B5BC", fontStyle: "italic" }}>Absent</td>
-                  ) : g.positions.map((pos, i) => (
-                    <td key={i} style={{ padding: "3px 3px", textAlign: "center" }}>
-                      {pos ? <span style={{ color: pos === "SIT" ? "#8A8F98" : POS_COLOR[pos], fontWeight: 700 }}>{pos}</span> : ""}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div style={{ marginTop: 24, textAlign: "center", fontSize: 10.5, color: "#B0B5BC" }}>Kitchener Panthers · Head Coach Jay Mielke · Generated from the 2026 season tracker</div>
-      </div>
-    </div>
-  );
-}
 
 /* ======================== APP SHELL ======================== */
 
@@ -1656,7 +1683,6 @@ const TABS = [
   { key: "addgame", label: "Add Game", icon: PlusCircle },
   { key: "batting", label: "Batting", icon: TrendingUp },
   { key: "mvp", label: "MVP", icon: Trophy },
-  { key: "reports", label: "Reports", icon: FileText },
 ];
 
 async function seedDatabase() {
@@ -1682,6 +1708,12 @@ export default function App({ onSignOut }) {
   const [mvpAwards, setMvpAwards] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [viewPlayerName, setViewPlayerName] = useState(null);
+
+  const handleViewPlayer = useCallback((name) => {
+    setViewPlayerName(name);
+    setTab("players");
+  }, []);
 
   const refresh = useCallback(() => {
     loadData().then(({ games, batting, roster, mvpAwards }) => { setGames(games); setBatting(batting); setRoster(roster); setMvpAwards(mvpAwards); });
@@ -1824,12 +1856,11 @@ export default function App({ onSignOut }) {
       </div>
 
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "22px 18px 60px" }}>
-        {tab === "dashboard" && <DashboardTab games={games} batting={batting} roster={roster} />}
-        {tab === "players" && <PlayersTab games={games} batting={batting} roster={roster} onUploadPhoto={handleUploadPhoto} />}
+        {tab === "dashboard" && <DashboardTab games={games} batting={batting} roster={roster} onViewPlayer={handleViewPlayer} />}
+        {tab === "players" && <PlayersTab games={games} batting={batting} roster={roster} onUploadPhoto={handleUploadPhoto} initialPlayerName={viewPlayerName} onConsumeInitialPlayer={() => setViewPlayerName(null)} />}
         {tab === "addgame" && <AddGameTab games={games} roster={roster} onSave={handleSaveGames} onDelete={handleDeleteGame} onAddPlayer={handleAddPlayer} onReorderRoster={handleReorderRoster} />}
         {tab === "batting" && <BattingTab batting={batting} roster={roster} onSave={handleSaveBatting} />}
         {tab === "mvp" && <MvpTab games={games} roster={roster} mvpAwards={mvpAwards} onAward={handleAwardMvp} onRemoveAward={handleRemoveMvpAward} />}
-        {tab === "reports" && <ReportsTab games={games} batting={batting} roster={roster} />}
       </div>
     </div>
   );
