@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "./supabaseClient";
+import Papa from "papaparse";
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from "recharts";
@@ -149,12 +150,48 @@ const GAME_TYPES = ["Regular Season", "Exhibition", "Tournament", "Playoff"];
 const GAME_TYPE_COLOR = { "Regular Season": BLUE, Exhibition: "#595959", Tournament: "#000000", Playoff: "#000000" };
 
 function blankBattingRow(player) {
-  return { jersey: player.jersey, name: player.name, GP: 0, AB: 0, H: 0, "1B": 0, "2B": 0, "3B": 0, HR: 0, RBI: 0, R: 0, SO: 0 };
+  return { jersey: player.jersey, name: player.name, GP: 0, AB: 0, H: 0, "1B": 0, "2B": 0, "3B": 0, HR: 0, RBI: 0, R: 0, SO: 0, FC: 0 };
 }
 
-/* ======================== SUPABASE DATA LAYER ======================== */
+function parseGameChangerCSV(text) {
+  const parsed = Papa.parse(text, { skipEmptyLines: true });
+  const rows = parsed.data;
+  if (!rows || rows.length < 3) return { error: "Couldn't read that file — is it a GameChanger stats export?" };
+  const header = rows[1];
+  const gpIndices = header.map((h, i) => (h && h.trim() === "GP" ? i : -1)).filter((i) => i >= 0);
+  if (gpIndices.length === 0) return { error: "Couldn't find the batting columns in that file." };
+  const battingEnd = gpIndices.length > 1 ? gpIndices[1] : header.length;
+  const slice = header.slice(0, battingEnd);
+  function findCol(name) {
+    const idx = slice.findIndex((h) => h && h.trim().toUpperCase() === name.toUpperCase());
+    return idx;
+  }
+  const idx = {
+    number: findCol("Number"), gp: findCol("GP"), ab: findCol("AB"), h: findCol("H"),
+    b1: findCol("1B"), b2: findCol("2B"), b3: findCol("3B"), hr: findCol("HR"),
+    rbi: findCol("RBI"), r: findCol("R"), so: findCol("SO"), fc: findCol("FC"),
+  };
+  if (idx.number === -1 || idx.ab === -1 || idx.h === -1) return { error: "That file doesn't look like a GameChanger batting export." };
+  const results = [];
+  for (let i = 2; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row[idx.number] || String(row[idx.number]).trim() === "" || String(row[0]).trim() === "Totals") continue;
+    const jersey = "#" + String(row[idx.number]).trim();
+    results.push({
+      jersey,
+      GP: Number(row[idx.gp]) || 0, AB: Number(row[idx.ab]) || 0, H: Number(row[idx.h]) || 0,
+      "1B": Number(row[idx.b1]) || 0, "2B": Number(row[idx.b2]) || 0, "3B": Number(row[idx.b3]) || 0,
+      HR: Number(row[idx.hr]) || 0, RBI: Number(row[idx.rbi]) || 0, R: Number(row[idx.r]) || 0,
+      SO: Number(row[idx.so]) || 0, FC: idx.fc >= 0 ? (Number(row[idx.fc]) || 0) : 0,
+    });
+  }
+  if (results.length === 0) return { error: "No player rows found in that file." };
+  return { results };
+}
 
-const BAT_FIELDS = { GP: "gp", AB: "ab", H: "h", "1B": "b1", "2B": "b2", "3B": "b3", HR: "hr", RBI: "rbi", R: "r", SO: "so" };
+
+
+const BAT_FIELDS = { GP: "gp", AB: "ab", H: "h", "1B": "b1", "2B": "b2", "3B": "b3", HR: "hr", RBI: "rbi", R: "r", SO: "so", FC: "fc" };
 
 function battingRowFromDb(row) {
   const out = { jersey: row.jersey, name: row.player_name };
@@ -240,8 +277,8 @@ async function uploadPlayerPhoto(playerId, file) {
     const photoUrl = data.publicUrl;
     const { error: dbErr } = await supabase.from("players").update({ photo_url: photoUrl }).eq("id", playerId);
     if (dbErr) throw dbErr;
-    return photoUrl;
-  } catch (e) { console.error(e); return null; }
+    return { url: photoUrl };
+  } catch (e) { console.error(e); return { error: (e && e.message) || String(e) }; }
 }
 
 async function saveMvpAward(award) {
@@ -265,6 +302,91 @@ async function deleteMvpAward(id) {
 
 
 /* ======================== SMALL UI PIECES ======================== */
+
+function PlayerAvatar({ player, size }) {
+  if (player.photoUrl) {
+    return <img src={player.photoUrl} alt={player.name} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%", background: "#EDEDED", display: "flex", alignItems: "center", justifyContent: "center",
+      color: "#8A8F98", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: size * 0.36, flexShrink: 0
+    }}>
+      {player.name.split(" ").map((w) => w[0]).join("")}
+    </div>
+  );
+}
+
+function getPrimaryPosition(posCounts) {
+  let best = null, bestCount = 0;
+  ALL_POS.forEach((pos) => {
+    const c = posCounts[pos] || 0;
+    if (c > bestCount) { best = pos; bestCount = c; }
+  });
+  return best;
+}
+
+function StatLeaderCard({ label, statKey, ranked, fmt }) {
+  const leader = ranked[0];
+  const rest = ranked.slice(1, 4);
+  if (!leader) return null;
+  return (
+    <div style={{ background: `linear-gradient(135deg, #000000, ${BLUE_DK})`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div>
+          <div style={{ color: "rgba(255,255,255,0.75)", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+          <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 34, lineHeight: 1.1, marginTop: 2 }}>{fmt(leader[statKey])}</div>
+          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600, marginTop: 4 }}>{leader.name}</div>
+          <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 11.5 }}>{leader.primaryPos ? `${leader.primaryPos} · ` : ""}{leader.jersey}</div>
+        </div>
+        <PlayerAvatar player={leader} size={56} />
+      </div>
+      <div style={{ background: "#fff", padding: "6px 6px" }}>
+        {rest.map((p) => (
+          <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px" }}>
+            <PlayerAvatar player={p} size={26} />
+            <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK }}>{p.name}</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 700, color: NAVY }}>{fmt(p[statKey])}</div>
+          </div>
+        ))}
+        {rest.length === 0 && <div style={{ padding: "8px 8px", fontSize: 12, color: "#B0B5BC" }}>Not enough players yet</div>}
+      </div>
+    </div>
+  );
+}
+
+function TeamLeadersSection({ battingCalc, fielding }) {
+  const enriched = useMemo(() => battingCalc.map((p) => ({
+    ...p,
+    photoUrl: p.photoUrl,
+    primaryPos: fielding[p.name] ? getPrimaryPosition(fielding[p.name].posCounts) : null,
+  })), [battingCalc, fielding]);
+
+  function rankedBy(key) {
+    return [...enriched].filter((p) => p.AB > 0 || key === "SO").sort((a, b) => (b[key] || 0) - (a[key] || 0));
+  }
+
+  const groups = [
+    [{ key: "AVG", label: "Batting Average", fmt: fmtAvg }, { key: "OPS", label: "OPS", fmt: fmtAvg }, { key: "SLG", label: "Slugging", fmt: fmtAvg }],
+    [{ key: "H", label: "Hits", fmt: (v) => String(v) }, { key: "1B", label: "Singles", fmt: (v) => String(v) }, { key: "2B", label: "Doubles", fmt: (v) => String(v) }],
+    [{ key: "3B", label: "Triples", fmt: (v) => String(v) }, { key: "RBI", label: "Runs Batted In", fmt: (v) => String(v) }, { key: "SO", label: "Strikeouts", fmt: (v) => String(v) }],
+  ];
+
+  return (
+    <div style={{ background: "#000", borderRadius: 12, padding: 20, marginTop: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <Trophy size={18} color={GOLD} />
+        <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 20 }}>Team Leaders</div>
+      </div>
+      {groups.map((row, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
+          {row.map((s) => <StatLeaderCard key={s.key} label={s.label} statKey={s.key} fmt={s.fmt} ranked={rankedBy(s.key)} />)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
 function StatCard({ label, value, sub, accent }) {
   return (
@@ -321,7 +443,10 @@ function DashboardTab({ games, batting, roster }) {
     [games, typeFilter]
   );
   const { rows: fielding, meanBalance } = useMemo(() => computeFielding(filteredGames, roster), [filteredGames, roster]);
-  const battingCalc = useMemo(() => computeBatting(batting).sort((a, b) => b.AVG - a.AVG), [batting]);
+  const battingCalc = useMemo(() => {
+    const photoByName = Object.fromEntries(roster.map((p) => [p.name, p.photoUrl]));
+    return computeBatting(batting).map((p) => ({ ...p, photoUrl: photoByName[p.name] || null })).sort((a, b) => b.AVG - a.AVG);
+  }, [batting, roster]);
   const [sortKey, setSortKey] = useState("AVG");
   const [sortDir, setSortDir] = useState(-1);
 
@@ -348,7 +473,7 @@ function DashboardTab({ games, batting, roster }) {
     else { setSortKey(key); setSortDir(-1); }
   }
   const cols = [
-    ["AVG", "AVG"], ["OBP", "OBP"], ["OPS", "OPS"], ["SLG", "SLG"], ["H", "H"], ["AB", "AB"], ["RBI", "RBI"], ["R", "R"], ["SO", "SO"],
+    ["AVG", "AVG"], ["OBP", "OBP"], ["OPS", "OPS"], ["SLG", "SLG"], ["H", "H"], ["1B", "1B"], ["2B", "2B"], ["3B", "3B"], ["HR", "HR"], ["RBI", "RBI"], ["R", "R"], ["SO", "SO"], ["FC", "FC"],
   ];
 
   return (
@@ -395,32 +520,40 @@ function DashboardTab({ games, batting, roster }) {
             })}
           </div>
         </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 760 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 1180 }}>
           <thead>
-            <tr style={{ textAlign: "left", color: "#8A8F98", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              <th style={{ padding: "6px 8px" }}>#</th>
-              <th style={{ padding: "6px 8px" }}>Player</th>
-              <th style={{ padding: "6px 8px" }}>IF / OF Split</th>
-              <th style={{ padding: "6px 8px", textAlign: "right" }}>OF</th>
-              <th style={{ padding: "6px 8px", textAlign: "right" }}>IF</th>
-              <th style={{ padding: "6px 8px", textAlign: "right" }}>SIT</th>
-              <th style={{ padding: "6px 8px" }}>Balance</th>
-              <th style={{ padding: "6px 8px", textAlign: "right" }}>Ratio</th>
+            <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              <th style={{ padding: "6px 6px", textAlign: "left" }}>#</th>
+              <th style={{ padding: "6px 6px", textAlign: "left" }}>Player</th>
+              {OUTFIELD.map((pos) => <th key={pos} style={{ padding: "6px 5px" }}>{pos}</th>)}
+              {INFIELD.map((pos) => <th key={pos} style={{ padding: "6px 5px" }}>{pos}</th>)}
+              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>OF Total</th>
+              <th style={{ padding: "6px 6px" }}>OF %</th>
+              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>IF Total</th>
+              <th style={{ padding: "6px 6px" }}>IF %</th>
+              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>Balance</th>
+              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>SIT</th>
+              <th style={{ padding: "6px 6px" }}>SIT %</th>
+              <th style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7" }}>Total</th>
             </tr>
           </thead>
           <tbody>
-            {roster.map((p, i) => {
+            {roster.map((p) => {
               const r = fielding[p.name];
               return (
                 <tr key={p.name} style={{ borderTop: "1px solid #E7E7E7" }}>
-                  <td style={{ padding: "8px", color: "#8A8F98" }}>{p.jersey}</td>
-                  <td style={{ padding: "8px", fontWeight: 600, color: INK }}>{p.name}</td>
-                  <td style={{ padding: "8px", width: 140 }}><FieldBar ofPct={r.ofPct} ifPct={r.ifPct} /></td>
-                  <td style={{ padding: "8px", textAlign: "right" }}>{r.of}</td>
-                  <td style={{ padding: "8px", textAlign: "right" }}>{r.if}</td>
-                  <td style={{ padding: "8px", textAlign: "right", color: "#8A8F98" }}>{r.sit}</td>
-                  <td style={{ padding: "8px" }}><BalanceChip dev={r.deviation} balance={r.balance} /></td>
-                  <td style={{ padding: "8px", textAlign: "right", color: "#8A8F98" }}>{r.ratio}</td>
+                  <td style={{ padding: "7px 6px", color: "#8A8F98" }}>{p.jersey}</td>
+                  <td style={{ padding: "7px 6px", fontWeight: 600, color: INK, whiteSpace: "nowrap" }}>{p.name}</td>
+                  {OUTFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
+                  {INFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
+                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.of}</td>
+                  <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ofPct * 100)}%</td>
+                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.if}</td>
+                  <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ifPct * 100)}%</td>
+                  <td style={{ padding: "7px 6px", borderLeft: "1px solid #E7E7E7" }}><BalanceChip dev={r.deviation} balance={r.balance} /></td>
+                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", color: "#8A8F98" }}>{r.sit}</td>
+                  <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.sitPct * 100)}%</td>
+                  <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.total}</td>
                 </tr>
               );
             })}
@@ -436,11 +569,13 @@ function DashboardTab({ games, batting, roster }) {
 
       <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
         <SectionHeading icon={TrendingUp}>Batting Summary</SectionHeading>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 700 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 900 }}>
           <thead>
             <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <th style={{ padding: "6px 8px", textAlign: "left" }}>#</th>
               <th style={{ padding: "6px 8px", textAlign: "left" }}>Player</th>
-              <th style={{ padding: "6px 8px", textAlign: "left" }}>GP</th>
+              <th style={{ padding: "6px 8px" }}>GP</th>
+              <th style={{ padding: "6px 8px" }}>AB</th>
               {cols.map(([key, label]) => (
                 <th key={key} onClick={() => headerClick(key)} style={{ padding: "6px 8px", cursor: "pointer", userSelect: "none" }}>
                   {label} {sortKey === key ? (sortDir === -1 ? "▼" : "▲") : ""}
@@ -451,22 +586,30 @@ function DashboardTab({ games, batting, roster }) {
           <tbody>
             {sortedBatting.map((p) => (
               <tr key={p.name} style={{ borderTop: "1px solid #E7E7E7" }}>
+                <td style={{ padding: "8px", color: "#8A8F98" }}>{p.jersey}</td>
                 <td style={{ padding: "8px", fontWeight: 600 }}>{p.name}</td>
-                <td style={{ padding: "8px" }}>{p.GP}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.GP}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.AB}</td>
                 <td style={{ padding: "8px", textAlign: "right", fontWeight: 700, color: NAVY }}>{fmtAvg(p.AVG)}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{fmtAvg(p.OBP)}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{fmtAvg(p.OPS)}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{fmtAvg(p.SLG)}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{p.H}</td>
-                <td style={{ padding: "8px", textAlign: "right" }}>{p.AB}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p["1B"]}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p["2B"]}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p["3B"]}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.HR}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{p.RBI}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{p.R}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>{p.SO}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.FC || 0}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <TeamLeadersSection battingCalc={battingCalc} fielding={fielding} />
     </div>
   );
 }
@@ -491,8 +634,12 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
     const file = e.target.files && e.target.files[0];
     if (!file || !onUploadPhoto) return;
     setUploading(true);
-    await onUploadPhoto(player.id, file);
+    const result = await onUploadPhoto(player.id, file);
     setUploading(false);
+    if (result && result.error) {
+      window.alert("Photo upload failed:\n\n" + result.error);
+    }
+    e.target.value = "";
   }
 
   const gameLog = games.map((g) => {
@@ -1293,6 +1440,8 @@ function BattingTab({ batting, roster, onSave }) {
   const [rows, setRows] = useState(orderedSeed);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [importMsg, setImportMsg] = useState("");
+  const fileInputRef = React.useRef(null);
   useEffect(() => setRows(orderedSeed), [orderedSeed]);
 
   function update(name, field, value) {
@@ -1307,15 +1456,48 @@ function BattingTab({ batting, roster, onSave }) {
     setTimeout(() => setMsg(""), 3000);
   }
 
+  function handleImportClick() {
+    setImportMsg("");
+    fileInputRef.current && fileInputRef.current.click();
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const { results, error } = parseGameChangerCSV(String(reader.result));
+      if (error) { setImportMsg(error); return; }
+      const byJersey = Object.fromEntries(results.map((r) => [r.jersey, r]));
+      let matched = 0;
+      setRows((rs) => rs.map((r) => {
+        const found = byJersey[r.jersey];
+        if (!found) return r;
+        matched += 1;
+        return { ...r, GP: found.GP, AB: found.AB, H: found.H, "1B": found["1B"], "2B": found["2B"], "3B": found["3B"], HR: found.HR, RBI: found.RBI, R: found.R, SO: found.SO, FC: found.FC };
+      }));
+      setImportMsg(`Imported stats for ${matched} of ${results.length} players from the file. Review below, then click Save.`);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
   const calc = computeBatting(rows);
-  const fields = ["GP", "AB", "H", "1B", "2B", "3B", "HR", "RBI", "R", "SO"];
+  const fields = ["GP", "AB", "H", "1B", "2B", "3B", "HR", "RBI", "R", "SO", "FC"];
 
   return (
     <div>
       <SectionHeading icon={TrendingUp}>Batting Stats</SectionHeading>
       <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
-        <div style={{ fontSize: 12.5, color: "#8A8F98", marginBottom: 12 }}>Enter season totals from your GameChanger export. AVG / OBP / SLG / OPS calculate automatically.</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 820 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+          <div style={{ fontSize: 12.5, color: "#8A8F98", maxWidth: 480 }}>Enter season totals from your GameChanger export, or import the CSV directly below. AVG / OBP / SLG / OPS calculate automatically.</div>
+          <div>
+            <button onClick={handleImportClick} style={ghostBtnStyle}><PlusCircle size={14} /> Import GameChanger CSV</button>
+            <input ref={fileInputRef} type="file" accept=".csv" style={{ display: "none" }} onChange={handleFileChange} />
+          </div>
+        </div>
+        {importMsg && <div style={{ fontSize: 12.5, color: importMsg.startsWith("Imported") ? GREENOK : "#000", background: PAPER, borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>{importMsg}</div>}
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 880 }}>
           <thead>
             <tr style={{ textAlign: "center", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
               <th style={{ padding: "5px 6px", textAlign: "left" }}>Player</th>
@@ -1331,8 +1513,8 @@ function BattingTab({ batting, roster, onSave }) {
                   <td style={{ padding: "5px 6px", fontWeight: 600, whiteSpace: "nowrap" }}>{r.jersey} {r.name}</td>
                   {fields.map((f) => (
                     <td key={f} style={{ padding: "3px" }}>
-                      <input type="number" value={r[f]} onChange={(e) => update(r.name, f, e.target.value)}
-                        style={{ width: 46, padding: "3px 2px", borderRadius: 5, border: "1px solid #D5D5D5", fontSize: 12, textAlign: "center" }} />
+                      <input type="number" value={r[f] || 0} onChange={(e) => update(r.name, f, e.target.value)}
+                        style={{ width: 42, padding: "3px 2px", borderRadius: 5, border: "1px solid #D5D5D5", fontSize: 12, textAlign: "center" }} />
                     </td>
                   ))}
                   <td style={{ padding: "5px 4px", textAlign: "center", fontWeight: 700, color: NAVY }}>{fmtAvg(c.AVG)}</td>
@@ -1539,9 +1721,9 @@ export default function App({ onSignOut }) {
   }, []);
 
   const handleUploadPhoto = useCallback(async (playerId, file) => {
-    const url = await uploadPlayerPhoto(playerId, file);
-    if (url) setRoster((r) => r.map((p) => (p.id === playerId ? { ...p, photoUrl: url } : p)));
-    return url;
+    const result = await uploadPlayerPhoto(playerId, file);
+    if (result.url) setRoster((r) => r.map((p) => (p.id === playerId ? { ...p, photoUrl: result.url } : p)));
+    return result;
   }, []);
 
   const handleAwardMvp = useCallback(async (award) => {
