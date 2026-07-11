@@ -844,6 +844,1922 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
           <div aria-hidden="true" style={{ position: "absolute", right: 8, bottom: -30, fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 170, color: BLUE_DK, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
             {(player.jersey || "").replace("#", "")}
           </div>
+          <div style={{ position: "absolute", top: 16, right: -55, transform: "rotate(45deg)", width: 210, background: CARD_GOLD, color: "#3A2E05", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 10, letterSpacing: "0.04em", whiteSpace: "nowrap", padding: "4px 0", textAlign: "center" }}>
+            2026 SEASON
+          </div>
+          <div style={{ position: "absolute", top: 12, left: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={PANTHERS_LOGO} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: "#fff", fontWeight: 800, fontSize: 12, letterSpacing: "0.06em", lineHeight: 1.25 }}>
+              KITCHENER<br /><span style={{ color: BLUE }}>PANTHERS</span>
+            </div>
+          </div>
+
+          <div style={{ position: "absolute", left: 258, top: 54, right: 16 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{player.name}</div>
+            <div style={{ color: CARD_GOLD, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginTop: 6, textTransform: "uppercase" }}>
+              {player.jersey} · {primaryPos ? POS_LABELS[primaryPos] : "Panthers"}
+            </div>
+          </div>
+
+          <div style={{ position: "absolute", left: 258, bottom: 16, right: 16, display: "flex", gap: 8 }}>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", color: "#fff", fontSize: 19, fontWeight: 600 }}>{attendancePct}%</div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Games played</div>
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", color: "#fff", fontSize: 19, fontWeight: 600 }}>{primaryPos || "—"}</div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Primary position</div>
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "'Oswald', sans-serif", color: "#fff", fontSize: 19, fontWeight: 600 }}>
+                {r.balance > 0 ? <TrendingUp size={15} color="#8FD19E" /> : r.balance < 0 ? <TrendingDown size={15} color="#F2A7A7" /> : <Minus size={15} color="#CFD8E3" />}
+                {r.balance > 0 ? `+${r.balance}` : r.balance < 0 ? `${Math.abs(r.balance)}` : "Even"}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {r.balance > 0 ? "IF trend" : r.balance < 0 ? "OF trend" : "Balanced"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ position: "absolute", left: 20, top: 50, width: 235, height: 235, borderRadius: "50%", background: "#fff" }}>
+          {player.photoUrl ? (
+            <img src={player.photoUrl} alt={player.name} style={{ width: 235, height: 235, borderRadius: "50%", objectFit: "cover", border: "6px solid #fff", background: "#fff" }} />
+          ) : (
+            <div style={{ width: 235, height: 235, borderRadius: "50%", background: "#fff", border: "6px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", color: BLUE, fontFamily: "'Oswald', sans-serif", fontSize: 74, fontWeight: 700 }}>
+              {player.name.split(" ").map((w) => w[0]).join("")}
+            </div>
+          )}
+          {onUploadPhoto && (
+            <button className="no-print" onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
+              position: "absolute", bottom: 6, right: 6, width: 40, height: 40, borderRadius: "50%", background: CARD_GOLD, border: "4px solid #fff",
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: CARD_INK
+            }}>
+              {uploading ? <Loader2 size={16} className="spin" /> : <PlusCircle size={16} />}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18, alignItems: "center" }}>
+        {playerMvpCount > 0 && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: CARD_INK, color: CARD_GOLD, padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <Trophy size={12} color={CARD_GOLD} /> {playerMvpCount} MVP award{playerMvpCount > 1 ? "s" : ""} this season
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
+        <div style={{ flex: "1 1 260px", minWidth: 260 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 14, fontWeight: 600 }}>Fielding Breakdown</div>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart margin={{ top: 30, right: 30, bottom: 10, left: 30 }}>
+              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={62} paddingAngle={2} labelLine={false}
+                label={({ name, value }) => `${name}: ${value} (${pieTotal ? Math.round((value / pieTotal) * 100) : 0}%)`}>
+                {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+              </Pie>
+              <Tooltip />
+              <Legend verticalAlign="bottom" height={24} iconSize={9} wrapperStyle={{ fontSize: 11 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div style={{ flex: "1 1 300px", minWidth: 260 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 6, fontWeight: 600 }}>Innings by Position</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={posBarData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E7E7E7" />
+              <XAxis dataKey="pos" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2) || 5]} />
+              <Tooltip />
+              <Bar dataKey="innings" label={{ position: "top", fontSize: 11, fontWeight: 700, fill: INK }}>
+                {posBarData.map((d, i) => <Cell key={i} fill={POS_COLOR[d.pos]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
+        <div style={{ flex: "2 1 380px", minWidth: 320 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+            {battingFieldsRow1.map(battingChip)}
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {battingFieldsRow2.map(battingChip)}
+          </div>
+        </div>
+        <div style={{ flex: "1 1 220px", minWidth: 200 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>What the abbreviations mean</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px 14px", fontSize: 11.5, color: "#5A5F66", background: PAPER, borderRadius: 8, padding: "10px 12px" }}>
+            {STAT_GLOSSARY.map(([abbr, full]) => (
+              <div key={abbr}><b style={{ color: INK }}>{abbr}</b> = {full}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Game Log</div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 560 }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
+                <th style={{ padding: "5px 6px" }}>#</th><th style={{ padding: "5px 6px" }}>Date</th><th style={{ padding: "5px 6px" }}>Opponent</th>
+                {[1,2,3,4,5,6,7].map((n) => <th key={n} style={{ padding: "5px 6px", textAlign: "center" }}>I{n}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {gameLog.map((g, i) => (
+                <tr key={g.gameNum} style={{ borderTop: "1px solid #C7C7C7", background: i % 2 === 1 ? "#F7F7F5" : "#fff" }}>
+                  <td style={{ padding: "6px 6px", color: "#8A8F98" }}>{g.gameNum}</td>
+                  <td style={{ padding: "6px 6px" }}>{g.date}</td>
+                  <td style={{ padding: "6px 6px" }}>{g.opponent}</td>
+                  {!g.played ? (
+                    <td colSpan={7} style={{ padding: "6px 6px", textAlign: "center", color: "#B0B5BC", fontStyle: "italic" }}>Absent</td>
+                  ) : g.positions.map((pos, i) => (
+                    <td key={i} style={{ padding: "5px 4px", textAlign: "center" }}>
+                      {pos ? (
+                        <span style={{ background: (POS_COLOR[pos] || SIT_GRAY) + (pos === "SIT" ? "" : "22"), color: pos === "SIT" ? "#8A8F98" : POS_COLOR[pos], fontWeight: 700, borderRadius: 5, padding: "2px 5px", fontSize: 11 }}>{pos}</span>
+                      ) : ""}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${CARD_GOLD}`, textAlign: "center" }}>
+        <div style={{ fontSize: 11, color: "#B0B5BC" }}>
+          Kitchener Panthers · 2026 U8 Tier 1 · Statistics reflect regular season games only, as of {exportDate}.
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayersTab({ games, batting, roster, mvpAwards, onUploadPhoto, initialPlayerName, onConsumeInitialPlayer }) {
+  const [selected, setSelected] = useState(null);
+  const { rows: fielding } = useMemo(() => computeFielding(games, roster), [games, roster]);
+  const battingByName = useMemo(() => Object.fromEntries(batting.map((b) => [b.name, b])), [batting]);
+
+  useEffect(() => {
+    if (initialPlayerName) {
+      const found = roster.find((p) => p.name === initialPlayerName);
+      if (found) setSelected(found);
+      if (onConsumeInitialPlayer) onConsumeInitialPlayer();
+    }
+  }, [initialPlayerName, roster]);
+
+  if (selected) {
+    return (
+      <div>
+        <button className="no-print" onClick={() => setSelected(null)} style={{
+          display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: NAVY, fontWeight: 600,
+          cursor: "pointer", marginBottom: 14, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, padding: 0
+        }}>
+          <ChevronRight style={{ transform: "rotate(180deg)" }} size={16} /> All Players
+        </button>
+        <PlayerDetail player={selected} games={games} roster={roster} batting={batting} battingRow={battingByName[selected.name]} mvpAwards={mvpAwards} onUploadPhoto={onUploadPhoto} />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <SectionHeading icon={Users}>Roster</SectionHeading>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+        {roster.map((p) => {
+          const r = fielding[p.name];
+          const b = battingByName[p.name];
+          const avg = b ? (b.AB ? b.H / b.AB : 0) : 0;
+          return (
+            <button key={p.name} onClick={() => setSelected(p)} style={{
+              textAlign: "left", background: "#fff", borderRadius: 12, padding: 16, border: "1px solid #E7E7E7", cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)", transition: "transform .1s"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {p.photoUrl ? (
+                    <img src={p.photoUrl} alt={p.name} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: PAPER, border: "1px dashed #D5D5D5", display: "flex", alignItems: "center", justifyContent: "center", color: "#B0B5BC", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                      {p.name.split(" ").map((w) => w[0]).join("")}
+                    </div>
+                  )}
+                  <div>
+                    <div style={{ fontSize: 11, color: GOLD, fontWeight: 700, fontFamily: "'Barlow Condensed', sans-serif" }}>{p.jersey}</div>
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, color: NAVY, fontWeight: 600 }}>{p.name}</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} color="#B0B5BC" />
+              </div>
+              <div style={{ display: "flex", gap: 14, marginTop: 10, fontSize: 12.5 }}>
+                <div><span style={{ color: "#8A8F98" }}>AVG </span><b style={{ color: INK }}>{fmtAvg(avg)}</b></div>
+                <div><span style={{ color: "#8A8F98" }}>Bal </span><b style={{ color: balanceColor(r.deviation) }}>{r.balance >= 0 ? "+" : ""}{r.balance}</b></div>
+              </div>
+              <div style={{ marginTop: 8 }}><FieldBar ofPct={r.ofPct} ifPct={r.ifPct} /></div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ======================== MVP TAB ======================== */
+
+function MvpTab({ games, roster, mvpAwards, onAward, onRemoveAward }) {
+  const [selectedPlayer, setSelectedPlayer] = useState(roster[0]?.name || "");
+  const [contextType, setContextType] = useState("game");
+  const [selectedGame, setSelectedGame] = useState("");
+  const [practiceDate, setPracticeDate] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
+
+  const counts = useMemo(() => {
+    const c = {};
+    roster.forEach((p) => { c[p.name] = 0; });
+    mvpAwards.forEach((a) => { if (c[a.name] !== undefined) c[a.name] += 1; });
+    return c;
+  }, [mvpAwards, roster]);
+
+  const sorted = useMemo(() => [...roster].sort((a, b) => (counts[b.name] || 0) - (counts[a.name] || 0)), [roster, counts]);
+  const maxCount = Math.max(1, ...roster.map((p) => counts[p.name] || 0));
+  const top3 = sorted.slice(0, 3);
+  const hasAnyAwards = mvpAwards.length > 0;
+
+  async function handleAward() {
+    if (!selectedPlayer) return;
+    if (contextType === "practice" && !practiceDate.trim()) { setErrMsg("Add a practice date first."); return; }
+    setSaving(true);
+    setErrMsg("");
+    let award;
+    if (contextType === "practice") {
+      award = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: selectedPlayer,
+        gameNum: null,
+        context: "practice",
+        practiceDate: practiceDate.trim(),
+        gameLabel: `Practice · ${practiceDate.trim()}`,
+        awardedAt: new Date().toISOString(),
+      };
+    } else {
+      const game = games.find((g) => String(g.gameNum) === String(selectedGame));
+      award = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: selectedPlayer,
+        gameNum: game ? game.gameNum : null,
+        context: "game",
+        gameLabel: game ? `Game ${game.gameNum} · ${game.date} · ${game.opponent}` : "No game specified",
+        awardedAt: new Date().toISOString(),
+      };
+    }
+    await onAward(award);
+    setSaving(false);
+    setSelectedGame("");
+    setPracticeDate("");
+  }
+
+  async function handleRemove(id) {
+    await onRemoveAward(id);
+  }
+
+  const podiumOrder = [top3[1], top3[0], top3[2]];
+  const podiumRanks = ["2nd", "1st", "3rd"];
+  const podiumHeights = [92, 118, 76];
+  const segBtnStyle = (active) => ({
+    flex: 1, padding: "8px 10px", borderRadius: 7, border: `1px solid ${active ? "#000" : "#D5D5D5"}`,
+    background: active ? "#000" : "#fff", color: active ? "#fff" : "#8A8F98", fontWeight: 700, fontSize: 13,
+    cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif",
+  });
+
+  return (
+    <div>
+      <SectionHeading icon={Trophy}>MVP Awards</SectionHeading>
+
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+        <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 10, fontWeight: 700 }}>Award MVP</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ flex: "1 1 200px" }}>
+            <label style={labelStyle}>Player</label>
+            <select style={inputStyle} value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)}>
+              {roster.map((p) => <option key={p.name} value={p.name}>{p.jersey} {p.name}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: "1 1 140px" }}>
+            <label style={labelStyle}>Awarded at</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button type="button" onClick={() => setContextType("game")} style={segBtnStyle(contextType === "game")}>Game</button>
+              <button type="button" onClick={() => setContextType("practice")} style={segBtnStyle(contextType === "practice")}>Practice</button>
+            </div>
+          </div>
+          {contextType === "practice" ? (
+            <div style={{ flex: "1 1 200px" }}>
+              <label style={labelStyle}>Practice Date</label>
+              <input style={inputStyle} placeholder="e.g. July 10, 2026" value={practiceDate} onChange={(e) => setPracticeDate(e.target.value)} />
+            </div>
+          ) : (
+            <div style={{ flex: "1 1 220px" }}>
+              <label style={labelStyle}>Game (optional)</label>
+              <select style={inputStyle} value={selectedGame} onChange={(e) => setSelectedGame(e.target.value)}>
+                <option value="">No specific game</option>
+                {games.slice().reverse().map((g) => <option key={g.gameNum} value={g.gameNum}>Game {g.gameNum} · {g.date} · {g.opponent}</option>)}
+              </select>
+            </div>
+          )}
+          <button onClick={handleAward} disabled={saving || !selectedPlayer} style={primaryBtnStyle}>
+            {saving ? <Loader2 size={15} className="spin" /> : <Award size={15} />} Award MVP
+          </button>
+        </div>
+        {errMsg && <div style={{ fontSize: 12.5, color: "#000", marginTop: 8 }}>{errMsg}</div>}
+      </div>
+
+      {!hasAnyAwards ? (
+        <div style={{ background: "#fff", borderRadius: 12, padding: 32, textAlign: "center", color: "#8A8F98", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+          No MVP awards yet this season — hand out the first one above.
+        </div>
+      ) : (
+        <>
+          <div style={{ background: "#fff", borderRadius: 12, padding: "24px 20px 16px", marginBottom: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", fontWeight: 700 }}>Season Leaders</div>
+              <span style={{ fontSize: 11, fontWeight: 700, background: PAPER, border: "1px solid #E7E7E7", borderRadius: 999, padding: "3px 10px", color: "#8A8F98" }}>{mvpAwards.length} awarded</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 14, marginBottom: 8 }}>
+              {podiumOrder.map((p, i) => {
+                if (!p) return <div key={i} style={{ width: 92 }} />;
+                const isLead = i === 1;
+                const count = counts[p.name] || 0;
+                return (
+                  <div key={p.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 92 }}>
+                    <div style={{
+                      width: 46, height: 46, borderRadius: "50%", background: isLead ? BLUE : "#000",
+                      display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+                      fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 700, marginBottom: 6,
+                      border: isLead ? "3px solid #000" : "none"
+                    }}>{count}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, textAlign: "center", lineHeight: 1.2 }}>{p.name.split(" ")[0]}<br />{p.name.split(" ")[1]}</div>
+                    <div style={{
+                      width: "100%", height: podiumHeights[i], marginTop: 8, borderRadius: "6px 6px 0 0",
+                      background: isLead ? BLUE : "#EDEDED", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 8
+                    }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, color: isLead ? "#fff" : "#8A8F98" }}>{podiumRanks[i]}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ background: "#fff", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 12, fontWeight: 700 }}>Full Leaderboard</div>
+            {sorted.map((p) => {
+              const count = counts[p.name] || 0;
+              const isLead = count === maxCount && count > 0;
+              return (
+                <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderTop: "1px solid #EFEEE9" }}>
+                  <div style={{ fontSize: 11, color: "#8A8F98", width: 30, flexShrink: 0 }}>{p.jersey}</div>
+                  <div style={{ flex: "1 1 140px", fontSize: 13.5, fontWeight: 600, color: INK }}>{p.name}</div>
+                  <div style={{ flex: "1 1 100px", height: 6, background: "#EDEDED", borderRadius: 3, overflow: "hidden", maxWidth: 140 }}>
+                    <div style={{ width: `${(count / maxCount) * 100}%`, height: "100%", background: isLead ? BLUE : "#8A8F98", borderRadius: 3 }} />
+                  </div>
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, fontWeight: 700, color: isLead ? BLUE : INK, width: 22, textAlign: "right" }}>{count}</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      <button onClick={() => setShowHistory((s) => !s)} style={{ background: "none", border: "none", color: NAVY, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, marginBottom: 10, fontFamily: "'Barlow Condensed', sans-serif" }}>
+        {showHistory ? <ChevronDown size={16} /> : <ChevronRight size={16} />} Award History ({mvpAwards.length})
+      </button>
+      {showHistory && (
+        <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+          {mvpAwards.length === 0 && <div style={{ color: "#8A8F98", fontSize: 13.5 }}>No awards logged yet.</div>}
+          {mvpAwards.slice().reverse().map((a) => (
+            <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 4px", borderBottom: "1px solid #E7E7E7", fontSize: 13.5 }}>
+              <span><b>{a.name}</b> · {a.gameLabel}</span>
+              <button onClick={() => handleRemove(a.id)} style={{ background: "none", border: "none", color: "#000", cursor: "pointer" }}><Trash2 size={15} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ======================== ADD GAME TAB ======================== */
+
+const POS_OPTIONS = ["", "P", "C", "1B", "2B", "3B", "SS", "LF", "LC", "RC", "RF", "SIT"];
+
+/* ======================== LINEUP CARD (PRINT) ======================== */
+
+function MiniFieldDiagram({ size = 108 }) {
+  return (
+    <img src={FIELD_DIAGRAM} alt="Field position diagram" style={{ width: size, height: (size * 254) / 299, objectFit: "contain", display: "block" }} />
+  );
+}
+
+function chipStyle(pos) {
+  if (pos === "SIT") return { background: "#fff", color: "#000", border: "2px solid #000" };
+  if (INFIELD.includes(pos)) return { background: "#000", color: "#fff", border: "none" };
+  return { background: BLUE, color: "#fff", border: "none" };
+}
+
+function LineupCard({ draft, roster }) {
+  const rows = roster.map((p) => {
+    const entry = draft.players[p.name] || { positions: [null,null,null,null,null,null,null], absent: false };
+    return { p, positions: entry.positions, absent: !!entry.absent };
+  });
+  return (
+    <div style={{
+      width: "5.15in", height: "6.8in", background: "#fff", border: "1.5px solid #000", borderRadius: 6,
+      padding: "0.14in 0.16in", boxSizing: "border-box", display: "flex", flexDirection: "column", fontFamily: "'Inter', sans-serif",
+      breakInside: "avoid"
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, borderBottom: "2px solid #000", paddingBottom: "0.07in", marginBottom: "0.08in" }}>
+        <img src={PANTHERS_LOGO} alt="Panthers" style={{ width: "0.85in", height: "0.85in", objectFit: "contain", flexShrink: 0 }} />
+        <div style={{ flex: 1, textAlign: "center", padding: "0 4px" }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9.5, letterSpacing: "0.1em", color: BLUE_DK, fontWeight: 700 }}>{draft.date || "GAME DATE"}</div>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, fontWeight: 700, color: "#000", lineHeight: 1.15 }}>Panthers</div>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 12.5, fontWeight: 500, color: "#000" }}>{draft.opponent || "vs Opponent"}</div>
+          {draft.gameType && draft.gameType !== "Regular Season" && (
+            <div style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#fff", background: "#000", borderRadius: 999, padding: "1px 7px", display: "inline-block", marginTop: 2 }}>{draft.gameType}</div>
+          )}
+        </div>
+        <MiniFieldDiagram size={80} />
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, flex: 1 }}>
+        <thead>
+          <tr style={{ background: "#000", color: "#fff" }}>
+            <th style={{ padding: "5px 3px", fontWeight: 700, fontSize: 15.5 }}>#</th>
+            <th style={{ padding: "5px 5px", textAlign: "left", fontWeight: 700, fontSize: 15.5 }}>Player</th>
+            {[1,2,3,4,5,6,7].map((n) => <th key={n} style={{ padding: "5px 2px", fontWeight: 700, fontSize: 15.5 }}>{n}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={r.p.name} style={{ background: i % 2 === 1 ? "#F3F5F7" : "#fff" }}>
+              <td style={{ padding: "5px 3px", textAlign: "center", color: "#8A8F98", borderBottom: "1.5px solid #888888", fontWeight: 600, fontSize: 17.5 }}>{i + 1}</td>
+              <td style={{ padding: "5px 5px", fontWeight: 700, whiteSpace: "nowrap", borderBottom: "1.5px solid #888888", fontSize: 17.5 }}>{r.p.jersey} {r.p.name.split(" ")[0]} {r.p.name.split(" ")[1] ? r.p.name.split(" ")[1][0] + "." : ""}</td>
+              {r.absent ? (
+                <td colSpan={7} style={{ padding: "5px 3px", textAlign: "center", color: "#B0B5BC", fontStyle: "italic", borderBottom: "1.5px solid #888888" }}>Absent</td>
+              ) : r.positions.map((pos, j) => (
+                <td key={j} style={{ padding: "3.5px 1px", textAlign: "center", borderBottom: "1.5px solid #888888" }}>
+                  {pos ? (
+                    <span style={{
+                      display: "inline-block", minWidth: 32, fontWeight: 700, fontSize: 16, borderRadius: 4, padding: "2px 3px",
+                      ...chipStyle(pos)
+                    }}>{pos}</span>
+                  ) : ""}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div style={{ textAlign: "center", fontSize: 7.5, color: "#8A8F98", marginTop: "0.06in", borderTop: "1px solid #E7E7E7", paddingTop: "0.05in" }}>
+        KITCHENER PANTHERS · 2026 U8 TIER 1 · BENCH CARD
+      </div>
+    </div>
+  );
+}
+
+
+function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRoster }) {
+  const nextNum = games.length ? Math.max(...games.map((g) => g.gameNum)) + 1 : 1;
+  const [draft, setDraft] = useState(() => emptyGame(nextNum, roster));
+  const [expanded, setExpanded] = useState(false);
+  const [viewingGame, setViewingGame] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState("");
+  const [dragIndex, setDragIndex] = useState(null);
+  const [addingPlayer, setAddingPlayer] = useState(false);
+  const [newJersey, setNewJersey] = useState("");
+  const [newName, setNewName] = useState("");
+  const [addErr, setAddErr] = useState("");
+  const [showCards, setShowCards] = useState(false);
+  const [editingGameNum, setEditingGameNum] = useState(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const cardsCaptureRef = React.useRef(null);
+
+  async function handleDownloadPdf() {
+    if (!cardsCaptureRef.current) return;
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(cardsCaptureRef.current, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "landscape", unit: "in", format: [11, 8.5] });
+      const cardsW = 5.15 * 2, cardsH = 6.8;
+      const x = (11 - cardsW) / 2, y = (8.5 - cardsH) / 2;
+      pdf.addImage(imgData, "PNG", x, y, cardsW, cardsH);
+      const fileDate = (draft.date || "game").replace(/[,\s]+/g, "_");
+      pdf.save(`Panthers_Lineup_${fileDate}.pdf`);
+    } catch (e) {
+      window.alert("Couldn't generate the PDF:\n\n" + ((e && e.message) || String(e)));
+    }
+    setExportingPdf(false);
+  }
+
+  useEffect(() => { setDraft(emptyGame(nextNum, roster)); }, [games.length]);
+
+  // Keep the draft in sync when a new player is added mid-edit, without wiping what's already been entered.
+  useEffect(() => {
+    setDraft((d) => {
+      let changed = false;
+      const players = { ...d.players };
+      roster.forEach((p) => {
+        if (!players[p.name]) {
+          players[p.name] = { jersey: p.jersey, positions: [null, null, null, null, null, null, null], absent: false };
+          changed = true;
+        }
+      });
+      return changed ? { ...d, players } : d;
+    });
+  }, [roster]);
+
+  function updatePos(name, inningIdx, value) {
+    setDraft((d) => ({
+      ...d,
+      players: {
+        ...d.players,
+        [name]: { ...d.players[name], positions: d.players[name].positions.map((p, i) => (i === inningIdx ? (value || null) : p)) },
+      },
+    }));
+  }
+
+  function toggleAbsent(name) {
+    setDraft((d) => {
+      const cur = d.players[name];
+      const nowAbsent = !cur.absent;
+      return {
+        ...d,
+        players: {
+          ...d.players,
+          [name]: { ...cur, absent: nowAbsent, positions: nowAbsent ? [null, null, null, null, null, null, null] : cur.positions },
+        },
+      };
+    });
+  }
+
+  // Positions already claimed by someone else in a given inning (SIT is exempt — several players sit at once).
+  function usedInInning(inningIdx, excludeName) {
+    const used = new Set();
+    roster.forEach((p) => {
+      if (p.name === excludeName) return;
+      const entry = draft.players[p.name];
+      if (!entry || entry.absent) return;
+      const val = entry.positions[inningIdx];
+      if (val && val !== "SIT") used.add(val);
+    });
+    return used;
+  }
+
+  async function handleSave() {
+    if (!draft.date || !draft.opponent) { setSavedMsg("Add a date and opponent first."); return; }
+    setSaving(true);
+    const cleanedPlayers = {};
+    Object.entries(draft.players).forEach(([name, entry]) => {
+      cleanedPlayers[name] = { jersey: entry.jersey, positions: entry.positions };
+    });
+    const gameToSave = { gameNum: draft.gameNum, date: draft.date, opponent: draft.opponent, gameType: draft.gameType || "Regular Season", players: cleanedPlayers };
+    const isEditing = editingGameNum != null;
+    const updated = isEditing
+      ? games.map((g) => (g.gameNum === editingGameNum ? gameToSave : g))
+      : [...games, gameToSave];
+    const ok = await onSave(updated);
+    setSaving(false);
+    setSavedMsg(ok ? `Game ${draft.gameNum} ${isEditing ? "updated" : "saved"}.` : "Couldn't save — try again.");
+    if (ok) {
+      setEditingGameNum(null);
+      setDraft(emptyGame(isEditing ? nextNum : draft.gameNum + 1, roster));
+    }
+    setTimeout(() => setSavedMsg(""), 3000);
+  }
+
+  function editGame(g) {
+    const players = {};
+    roster.forEach((p) => {
+      const entry = g.players && g.players[p.name];
+      const positions = entry ? entry.positions : [null, null, null, null, null, null, null];
+      players[p.name] = { jersey: p.jersey, positions: [...positions], absent: !positions.some((v) => !!v) };
+    });
+    setDraft({ gameNum: g.gameNum, date: g.date, opponent: g.opponent, gameType: g.gameType || "Regular Season", players });
+    setEditingGameNum(g.gameNum);
+    setExpanded(false);
+    setSavedMsg("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingGameNum(null);
+    setDraft(emptyGame(nextNum, roster));
+  }
+
+  function handleAddPlayerSubmit() {
+    const name = newName.trim();
+    const jersey = newJersey.trim();
+    if (!name) { setAddErr("Enter a player name."); return; }
+    if (roster.some((p) => p.name.toLowerCase() === name.toLowerCase())) { setAddErr("That player is already on the roster."); return; }
+    onAddPlayer({ jersey: jersey ? (jersey.startsWith("#") ? jersey : `#${jersey}`) : "#—", name });
+    setNewJersey(""); setNewName(""); setAddingPlayer(false); setAddErr("");
+  }
+
+  function reorder(from, to) {
+    if (from === to || from == null || to == null) return;
+    const nr = [...roster];
+    const [moved] = nr.splice(from, 1);
+    nr.splice(to, 0, moved);
+    onReorderRoster(nr);
+  }
+
+  function moveUp(i) { if (i === 0) return; const nr = [...roster]; [nr[i - 1], nr[i]] = [nr[i], nr[i - 1]]; onReorderRoster(nr); }
+  function moveDown(i) { if (i === roster.length - 1) return; const nr = [...roster]; [nr[i + 1], nr[i]] = [nr[i], nr[i + 1]]; onReorderRoster(nr); }
+
+  return (
+    <div>
+      <div className="no-print">
+      <SectionHeading icon={PlusCircle}>{editingGameNum != null ? `Editing Game ${editingGameNum}` : "Log a New Game"}</SectionHeading>
+
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 16 }}>
+          <div>
+            <label style={labelStyle}>Game #</label>
+            <div style={{ ...inputStyle, background: PAPER, width: 70, textAlign: "center" }}>{draft.gameNum}</div>
+          </div>
+          <div style={{ flex: "1 1 180px" }}>
+            <label style={labelStyle}>Date</label>
+            <input style={inputStyle} placeholder="e.g. July 12, 2026" value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
+          </div>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={labelStyle}>Opponent</label>
+            <input style={inputStyle} placeholder="e.g. vs Cambridge 1" value={draft.opponent} onChange={(e) => setDraft((d) => ({ ...d, opponent: e.target.value }))} />
+          </div>
+          <div style={{ flex: "1 1 170px" }}>
+            <label style={labelStyle}>Game Type</label>
+            <select style={inputStyle} value={draft.gameType || "Regular Season"} onChange={(e) => setDraft((d) => ({ ...d, gameType: e.target.value }))}>
+              {GAME_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{ fontSize: 11.5, color: "#8A8F98", marginBottom: 8 }}>
+          Drag <GripVertical size={11} style={{ verticalAlign: "-2px" }} /> or use the arrows to reorder the batting lineup — this order carries through the whole app. Positions already taken in an inning grey out for everyone else; SIT can be used by more than one player.
+        </div>
+
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 780 }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
+                <th style={{ padding: "5px 4px", width: 46 }}></th>
+                <th style={{ padding: "5px 6px" }}>Player</th>
+                {[1,2,3,4,5,6,7].map((n) => <th key={n} style={{ padding: "5px 4px", textAlign: "center" }}>Inn {n}</th>)}
+                <th style={{ padding: "5px 6px", textAlign: "center" }}>Absent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roster.map((p, idx) => {
+                const entry = draft.players[p.name] || { positions: [null,null,null,null,null,null,null], absent: false };
+                const positions = entry.positions;
+                const isAbsent = !!entry.absent;
+                return (
+                  <tr key={p.name}
+                    draggable
+                    onDragStart={() => setDragIndex(idx)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => { reorder(dragIndex, idx); setDragIndex(null); }}
+                    style={{ borderTop: "1px solid #E7E7E7", background: isAbsent ? "#FAFAFA" : "transparent" }}>
+                    <td style={{ padding: "3px 4px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <span style={{ cursor: "grab", color: "#B0B5BC", display: "flex" }} title="Drag to reorder"><GripVertical size={15} /></span>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <button onClick={() => moveUp(idx)} disabled={idx === 0} style={arrowBtnStyle}><ChevronUp size={12} /></button>
+                          <button onClick={() => moveDown(idx)} disabled={idx === roster.length - 1} style={arrowBtnStyle}><ChevronDown size={12} /></button>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "5px 6px", fontWeight: 600, whiteSpace: "nowrap", opacity: isAbsent ? 0.45 : 1 }}>{p.jersey} {p.name}</td>
+                    {positions.map((val, i) => {
+                      const used = usedInInning(i, p.name);
+                      return (
+                        <td key={i} style={{ padding: "3px" }}>
+                          <select value={val || ""} disabled={isAbsent} onChange={(e) => updatePos(p.name, i, e.target.value)}
+                            style={{
+                              width: 58, padding: "3px 2px", borderRadius: 5, border: "1px solid #D5D5D5", fontSize: 12,
+                              background: isAbsent ? "#EDEDED" : val ? (POS_COLOR[val] || SIT_GRAY) + "22" : "#fff",
+                              color: isAbsent ? "#B0B5BC" : "inherit", cursor: isAbsent ? "not-allowed" : "pointer"
+                            }}>
+                            {POS_OPTIONS.map((o) => (
+                              <option key={o} value={o} disabled={o !== "" && o !== "SIT" && used.has(o)} style={{ color: used.has(o) ? "#C7C7C7" : "inherit" }}>
+                                {o || "—"}{o && o !== "SIT" && used.has(o) ? " (taken)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      );
+                    })}
+                    <td style={{ padding: "3px", textAlign: "center" }}>
+                      <button onClick={() => toggleAbsent(p.name)} title="Toggle absent for the full game" style={{
+                        width: 40, height: 22, borderRadius: 999, border: "none", cursor: "pointer", position: "relative",
+                        background: isAbsent ? "#000000" : "#D5D5D5", transition: "background .15s"
+                      }}>
+                        <span style={{
+                          position: "absolute", top: 2, left: isAbsent ? 20 : 2, width: 18, height: 18, borderRadius: "50%",
+                          background: "#fff", transition: "left .15s", boxShadow: "0 1px 2px rgba(0,0,0,0.3)"
+                        }} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {!addingPlayer ? (
+          <button onClick={() => setAddingPlayer(true)} style={{ ...ghostBtnStyle, marginTop: 14 }}>
+            <PlusCircle size={14} /> Add Player
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginTop: 14, flexWrap: "wrap", background: PAPER, padding: 12, borderRadius: 8 }}>
+            <div>
+              <label style={labelStyle}>Jersey #</label>
+              <input style={{ ...inputStyle, width: 80 }} placeholder="#100" value={newJersey} onChange={(e) => setNewJersey(e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Name</label>
+              <input style={{ ...inputStyle, width: 180 }} placeholder="New player name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            </div>
+            <button onClick={handleAddPlayerSubmit} style={primaryBtnStyle}><Save size={14} /> Add to Roster</button>
+            <button onClick={() => { setAddingPlayer(false); setAddErr(""); }} style={ghostBtnStyle}>Cancel</button>
+            {addErr && <span style={{ fontSize: 12.5, color: "#000" }}>{addErr}</span>}
+          </div>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+          <button onClick={handleSave} disabled={saving} style={primaryBtnStyle}>
+            {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} {editingGameNum != null ? "Save Changes" : "Save Game"}
+          </button>
+          {editingGameNum != null && (
+            <button onClick={cancelEdit} style={ghostBtnStyle}><X size={14} /> Cancel Edit</button>
+          )}
+          <button onClick={() => setShowCards((s) => !s)} style={ghostBtnStyle}>
+            <Printer size={14} /> {showCards ? "Hide" : "Export"} Lineup Cards
+          </button>
+          {savedMsg && <span style={{ fontSize: 13, color: (savedMsg.includes("saved") || savedMsg.includes("updated")) ? GREENOK : "#000000" }}>{savedMsg}</span>}
+        </div>
+      </div>
+      </div>
+
+      {showCards && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 10 }}>
+            <div style={{ fontSize: 12.5, color: "#8A8F98" }}>Preview — two identical cards, ready to cut and sleeve for the bench.</div>
+            <button onClick={handleDownloadPdf} disabled={exportingPdf} style={primaryBtnStyle}>
+              {exportingPdf ? <Loader2 size={14} className="spin" /> : <Printer size={14} />} {exportingPdf ? "Generating…" : "Download PDF"}
+            </button>
+          </div>
+          <div style={{ background: "#F0F0F0", padding: 16, borderRadius: 10, overflowX: "auto", display: "flex", justifyContent: "center" }}>
+            <div ref={cardsCaptureRef} style={{ display: "flex", gap: 0 }}>
+              <LineupCard draft={draft} roster={roster} />
+              <LineupCard draft={draft} roster={roster} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="no-print">
+      <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: NAVY, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, marginBottom: 10, fontFamily: "'Barlow Condensed', sans-serif" }}>
+        {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />} Logged Games ({games.length})
+      </button>
+      {expanded && (
+        <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+          {games.slice().reverse().map((g) => {
+            const isOpen = viewingGame === g.gameNum;
+            return (
+              <div key={g.gameNum} style={{ borderBottom: "1px solid #E7E7E7" }}>
+                <div onClick={() => setViewingGame(isOpen ? null : g.gameNum)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 4px", fontSize: 13.5, cursor: "pointer" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {isOpen ? <ChevronDown size={14} color="#B0B5BC" /> : <ChevronRight size={14} color="#B0B5BC" />}
+                    <b>Game {g.gameNum}</b> · {g.date} · {g.opponent}
+                    {g.gameType && g.gameType !== "Regular Season" && (
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em",
+                        color: "#fff", background: GAME_TYPE_COLOR[g.gameType] || "#000", borderRadius: 999, padding: "2px 8px"
+                      }}>{g.gameType}</span>
+                    )}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <button onClick={(e) => { e.stopPropagation(); editGame(g); }} style={{ background: "none", border: "none", color: BLUE_DK, cursor: "pointer", display: "flex", alignItems: "center" }} title="Edit this lineup"><Edit3 size={15} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(g.gameNum); }} style={{ background: "none", border: "none", color: "#000", cursor: "pointer", display: "flex", alignItems: "center" }} title="Delete this game"><Trash2 size={15} /></button>
+                  </span>
+                </div>
+                {isOpen && (
+                  <div style={{ overflowX: "auto", padding: "4px 4px 14px 26px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 560 }}>
+                      <thead>
+                        <tr style={{ textAlign: "left", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
+                          <th style={{ padding: "4px 6px" }}>Player</th>
+                          {[1,2,3,4,5,6,7].map((n) => <th key={n} style={{ padding: "4px 4px", textAlign: "center" }}>I{n}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roster.map((p) => {
+                          const entry = g.players && g.players[p.name];
+                          const positions = (entry && entry.positions) || [];
+                          const played = positions.some((v) => !!v);
+                          return (
+                            <tr key={p.name} style={{ borderTop: "1px solid #F0F0F0" }}>
+                              <td style={{ padding: "4px 6px", fontWeight: 600, whiteSpace: "nowrap" }}>{p.jersey} {p.name}</td>
+                              {!played ? (
+                                <td colSpan={7} style={{ padding: "4px 6px", textAlign: "center", color: "#B0B5BC", fontStyle: "italic" }}>Absent</td>
+                              ) : positions.map((pos, i) => (
+                                <td key={i} style={{ padding: "3px 3px", textAlign: "center" }}>
+                                  {pos ? <span style={{ color: pos === "SIT" ? "#8A8F98" : (POS_COLOR[pos] || "#000"), fontWeight: 700 }}>{pos}</span> : ""}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}
+
+const arrowBtnStyle = { background: "none", border: "none", cursor: "pointer", color: "#B0B5BC", padding: 0, lineHeight: 0.6 };
+const ghostBtnStyle = { display: "flex", alignItems: "center", gap: 6, background: "none", color: NAVY, border: "1px solid #D5D5D5", borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 13, fontFamily: "'Barlow Condensed', sans-serif" };
+
+const labelStyle = { display: "block", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#8A8F98", fontWeight: 600, marginBottom: 4 };
+const inputStyle = { padding: "8px 10px", borderRadius: 7, border: "1px solid #D5D5D5", fontSize: 14, width: "100%", fontFamily: "inherit", boxSizing: "border-box" };
+const primaryBtnStyle = { display: "flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontWeight: 600, cursor: "pointer", fontSize: 13.5, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.03em" };
+
+/* ======================== BATTING TAB ======================== */
+
+function BattingTab({ batting, roster, onSave }) {
+  const orderedSeed = useMemo(() => {
+    const byName = Object.fromEntries(batting.map((b) => [b.name, b]));
+    return roster.map((p) => byName[p.name] || blankBattingRow(p));
+  }, [batting, roster]);
+  const [rows, setRows] = useState(orderedSeed);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [importMsg, setImportMsg] = useState("");
+  const fileInputRef = React.useRef(null);
+  useEffect(() => setRows(orderedSeed), [orderedSeed]);
+
+  function update(name, field, value) {
+    setRows((rs) => rs.map((r) => (r.name === name ? { ...r, [field]: value === "" ? "" : Number(value) } : r)));
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    const ok = await onSave(rows);
+    setSaving(false);
+    setMsg(ok ? "Batting stats saved." : "Couldn't save — try again.");
+    setTimeout(() => setMsg(""), 3000);
+  }
+
+  function handleImportClick() {
+    setImportMsg("");
+    fileInputRef.current && fileInputRef.current.click();
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const { results, error } = parseGameChangerCSV(String(reader.result));
+      if (error) { setImportMsg(error); return; }
+      const byJersey = Object.fromEntries(results.map((r) => [r.jersey, r]));
+      let matched = 0;
+      setRows((rs) => rs.map((r) => {
+        const found = byJersey[r.jersey];
+        if (!found) return r;
+        matched += 1;
+        return { ...r, GP: found.GP, AB: found.AB, H: found.H, "1B": found["1B"], "2B": found["2B"], "3B": found["3B"], HR: found.HR, RBI: found.RBI, R: found.R, SO: found.SO, FC: found.FC };
+      }));
+      setImportMsg(`Imported stats for ${matched} of ${results.length} players from the file. Review below, then click Save.`);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  const calc = computeBatting(rows);
+  const fields = ["GP", "AB", "H", "1B", "2B", "3B", "HR", "RBI", "R", "SO", "FC"];
+
+  return (
+    <div>
+      <SectionHeading icon={TrendingUp}>Batting Stats</SectionHeading>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+          <div style={{ fontSize: 12.5, color: "#8A8F98", maxWidth: 480 }}>Enter season totals from your GameChanger export, or import the CSV directly below. AVG / OBP / SLG / OPS calculate automatically.</div>
+          <div>
+            <button onClick={handleImportClick} style={ghostBtnStyle}><PlusCircle size={14} /> Import GameChanger CSV</button>
+            <input ref={fileInputRef} type="file" accept=".csv" style={{ display: "none" }} onChange={handleFileChange} />
+          </div>
+        </div>
+        {importMsg && <div style={{ fontSize: 12.5, color: importMsg.startsWith("Imported") ? GREENOK : "#000", background: PAPER, borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>{importMsg}</div>}
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 880 }}>
+          <thead>
+            <tr style={{ textAlign: "center", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
+              <th style={{ padding: "5px 6px", textAlign: "left" }}>Player</th>
+              {fields.map((f) => <th key={f} style={{ padding: "5px 4px" }}>{f}</th>)}
+              <th style={{ padding: "5px 4px" }}>AVG</th><th style={{ padding: "5px 4px" }}>OBP</th><th style={{ padding: "5px 4px" }}>SLG</th><th style={{ padding: "5px 4px" }}>OPS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const c = calc.find((x) => x.name === r.name);
+              return (
+                <tr key={r.name} style={{ borderTop: "1px solid #E7E7E7" }}>
+                  <td style={{ padding: "5px 6px", fontWeight: 600, whiteSpace: "nowrap" }}>{r.jersey} {r.name}</td>
+                  {fields.map((f) => (
+                    <td key={f} style={{ padding: "3px" }}>
+                      <input type="number" value={r[f] || 0} onChange={(e) => update(r.name, f, e.target.value)}
+                        style={{ width: 42, padding: "3px 2px", borderRadius: 5, border: "1px solid #D5D5D5", fontSize: 12, textAlign: "center" }} />
+                    </td>
+                  ))}
+                  <td style={{ padding: "5px 4px", textAlign: "center", fontWeight: 700, color: NAVY }}>{fmtAvg(c.AVG)}</td>
+                  <td style={{ padding: "5px 4px", textAlign: "center" }}>{fmtAvg(c.OBP)}</td>
+                  <td style={{ padding: "5px 4px", textAlign: "center" }}>{fmtAvg(c.SLG)}</td>
+                  <td style={{ padding: "5px 4px", textAlign: "center" }}>{fmtAvg(c.OPS)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
+          <button onClick={handleSave} disabled={saving} style={primaryBtnStyle}>
+            {saving ? <Loader2 size={15} /> : <Save size={15} />} Save Batting Stats
+          </button>
+          {msg && <span style={{ fontSize: 13, color: msg.includes("saved") ? GREENOK : RED }}>{msg}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ======================== APP SHELL ======================== */
+
+const TABS = [
+  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "players", label: "Players", icon: Users },
+  { key: "addgame", label: "Add Game", icon: PlusCircle },
+  { key: "batting", label: "Batting", icon: TrendingUp },
+  { key: "mvp", label: "MVP", icon: Trophy },
+];
+
+async function seedDatabase() {
+  try {
+    const playerRows = ROSTER_SEED.map((p, i) => ({ jersey: p.jersey, name: p.name, sort_order: i }));
+    const { error: pErr } = await supabase.from("players").insert(playerRows);
+    if (pErr) throw pErr;
+    const battingRows = SEED_BATTING.map(battingRowToDb);
+    const { error: bErr } = await supabase.from("batting_stats").insert(battingRows);
+    if (bErr) throw bErr;
+    const gameRows = SEED_GAMES.map((g) => ({ game_num: g.gameNum, date: g.date, opponent: g.opponent, game_type: g.gameType || "Regular Season", players: g.players }));
+    const { error: gErr } = await supabase.from("games").insert(gameRows);
+    if (gErr) throw gErr;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+export default function App({ onSignOut }) {
+  const [tab, setTab] = useState("dashboard");
+  const [games, setGames] = useState(null);
+  const [batting, setBatting] = useState(null);
+  const [roster, setRoster] = useState(null);
+  const [mvpAwards, setMvpAwards] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [viewPlayerName, setViewPlayerName] = useState(null);
+
+  const handleViewPlayer = useCallback((name) => {
+    setViewPlayerName(name);
+    setTab("players");
+  }, []);
+
+  const refresh = useCallback(() => {
+    loadData().then(({ games, batting, roster, mvpAwards }) => { setGames(games); setBatting(batting); setRoster(roster); setMvpAwards(mvpAwards); });
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const handleSaveGames = useCallback(async (updated) => {
+    const ok = await saveGames(updated);
+    if (ok) setGames(updated);
+    return ok;
+  }, []);
+
+  const handleDeleteGame = useCallback(async (gameNum) => {
+    const ok = await deleteGameRow(gameNum);
+    if (ok) setGames((gs) => gs.filter((g) => g.gameNum !== gameNum));
+  }, []);
+
+  const handleSaveBatting = useCallback(async (updated) => {
+    const ok = await saveBatting(updated);
+    if (ok) setBatting(updated);
+    return ok;
+  }, []);
+
+  const handleAddPlayer = useCallback(async (newPlayer) => {
+    const added = await addPlayerRow(newPlayer, roster.length);
+    if (!added) return;
+    setRoster((r) => [...r, added]);
+    const nb = [...batting, blankBattingRow(newPlayer)];
+    await saveBatting(nb);
+    setBatting(nb);
+  }, [roster, batting]);
+
+  const handleReorderRoster = useCallback(async (newRoster) => {
+    setRoster(newRoster);
+    await saveRosterOrder(newRoster);
+  }, []);
+
+  const handleUploadPhoto = useCallback(async (playerId, file) => {
+    const result = await uploadPlayerPhoto(playerId, file);
+    if (result.url) setRoster((r) => r.map((p) => (p.id === playerId ? { ...p, photoUrl: result.url } : p)));
+    return result;
+  }, []);
+
+  const handleAwardMvp = useCallback(async (award) => {
+    const ok = await saveMvpAward(award);
+    if (ok) refresh();
+    return ok;
+  }, [refresh]);
+
+  const handleRemoveMvpAward = useCallback(async (id) => {
+    const ok = await deleteMvpAward(id);
+    if (ok) setMvpAwards((a) => a.filter((x) => x.id !== id));
+  }, []);
+
+  const handleSeed = useCallback(async () => {
+    setSeeding(true);
+    await seedDatabase();
+    setSeeding(false);
+    refresh();
+  }, [refresh]);
+
+  if (!games || !batting || !roster || !mvpAwards) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, fontFamily: "'Barlow Condensed', sans-serif", color: NAVY }}>
+        <Loader2 className="spin" size={20} style={{ marginRight: 8 }} /> Loading season data…
+      </div>
+    );
+  }
+
+  if (roster.length === 0) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "80vh", fontFamily: "'Inter', sans-serif", gap: 14, padding: 20, textAlign: "center" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, color: NAVY }}>No data yet in this database</div>
+        <div style={{ color: "#8A8F98", maxWidth: 420 }}>Load the 2026 season starter data (roster, 17 games, batting stats) to get going, or start from a blank roster in the Add Game tab.</div>
+        <button onClick={handleSeed} disabled={seeding} style={primaryBtnStyle}>
+          {seeding ? <Loader2 size={15} className="spin" /> : <PlusCircle size={15} />} Load Starter Season Data
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ fontFamily: "'Inter', sans-serif", background: PAPER, minHeight: "100vh", color: INK }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid ${GOLD}; outline-offset: 1px; }
+        @media print {
+          .no-print { display: none !important; }
+          body, #print-root { background: #fff !important; }
+        }
+        @media (max-width: 720px) {
+          .nav-desktop { display: none !important; }
+          .nav-mobile { display: flex !important; }
+        }
+      `}</style>
+
+      <div className="no-print" style={{ background: NAVY_DEEP, padding: "0 20px", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
+          <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: GOLD, display: "inline-block" }} /> PANTHERS TRACKER
+          </div>
+          <nav className="nav-desktop" style={{ display: "flex", gap: 4 }}>
+            {TABS.map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                display: "flex", alignItems: "center", gap: 6, background: tab === t.key ? "rgba(255,255,255,0.12)" : "transparent",
+                border: "none", color: tab === t.key ? GOLD : "#C9CFD8", padding: "8px 14px", borderRadius: 8, cursor: "pointer",
+                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: "0.02em"
+              }}>
+                <t.icon size={15} /> {t.label}
+              </button>
+            ))}
+            {onSignOut && (
+              <button onClick={onSignOut} title="Sign out" style={{ background: "transparent", border: "none", color: "#7C8494", padding: "8px 10px", cursor: "pointer" }}>
+                <X size={15} />
+              </button>
+            )}
+          </nav>
+          <button className="nav-mobile" style={{ display: "none", background: "none", border: "none", color: "#fff" }} onClick={() => setNavOpen((o) => !o)}>
+            {navOpen ? <X size={22} /> : <LayoutDashboard size={22} />}
+          </button>
+        </div>
+        {navOpen && (
+          <div className="nav-mobile" style={{ display: "flex", flexDirection: "column", paddingBottom: 10, gap: 2 }}>
+            {TABS.map((t) => (
+              <button key={t.key} onClick={() => { setTab(t.key); setNavOpen(false); }} style={{
+                display: "flex", alignItems: "center", gap: 8, background: tab === t.key ? "rgba(255,255,255,0.12)" : "transparent",
+                border: "none", color: tab === t.key ? GOLD : "#C9CFD8", padding: "10px 12px", borderRadius: 8, cursor: "pointer",
+                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 15, textAlign: "left"
+              }}>
+                <t.icon size={16} /> {t.label}
+              </button>
+            ))}
+            {onSignOut && (
+              <button onClick={onSignOut} style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: "none", color: "#7C8494", padding: "10px 12px", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 15, textAlign: "left" }}>
+                <X size={16} /> Sign Out
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "22px 18px 60px" }}>
+        {tab === "dashboard" && <DashboardTab games={games} batting={batting} roster={roster} onViewPlayer={handleViewPlayer} />}
+        {tab === "players" && <PlayersTab games={games} batting={batting} roster={roster} mvpAwards={mvpAwards} onUploadPhoto={handleUploadPhoto} initialPlayerName={viewPlayerName} onConsumeInitialPlayer={() => setViewPlayerName(null)} />}
+        {tab === "addgame" && <AddGameTab games={games} roster={roster} onSave={handleSaveGames} onDelete={handleDeleteGame} onAddPlayer={handleAddPlayer} onReorderRoster={handleReorderRoster} />}
+        {tab === "batting" && <BattingTab batting={batting} roster={roster} onSave={handleSaveBatting} />}
+        {tab === "mvp" && <MvpTab games={games} roster={roster} mvpAwards={mvpAwards} onAward={handleAwardMvp} onRemoveAward={handleRemoveMvpAward} />}
+      </div>
+    </div>
+  );
+}
+        r.total += 1;
+        const cls = classify(pos);
+        if (cls === "IF") r.if += 1;
+        else if (cls === "OF") r.of += 1;
+        else if (cls === "SIT") r.sit += 1;
+      });
+    });
+  });
+  const balances = Object.values(result).map((r) => r.if - r.of);
+  const meanBalance = balances.length ? balances.reduce((a, b) => a + b, 0) / balances.length : 0;
+  Object.values(result).forEach((r) => {
+    r.balance = r.if - r.of;
+    const fieldTotal = r.of + r.if;
+    r.ofPct = fieldTotal ? r.of / fieldTotal : 0;
+    r.ifPct = fieldTotal ? r.if / fieldTotal : 0;
+    r.sitPct = r.total ? r.sit / r.total : 0;
+    r.deviation = r.balance - meanBalance;
+    const g = gcd(r.of || 1, r.if || 1);
+    r.ratio = `${Math.round(r.of / g)}:${Math.round(r.if / g)}`;
+  });
+  return { rows: result, meanBalance };
+}
+
+function computeBatting(raw) {
+  return raw.map((p) => {
+    const AB = Number(p.AB) || 0;
+    const H = Number(p.H) || 0;
+    const s1 = Number(p["1B"]) || 0;
+    const s2 = Number(p["2B"]) || 0;
+    const s3 = Number(p["3B"]) || 0;
+    const hr = Number(p.HR) || 0;
+    const TB = s1 + s2 * 2 + s3 * 3 + hr * 4;
+    const AVG = AB ? H / AB : 0;
+    const OBP = AB ? H / AB : 0;
+    const SLG = AB ? TB / AB : 0;
+    const OPS = OBP + SLG;
+    return { ...p, AVG, OBP, SLG, OPS };
+  });
+}
+
+function fmtAvg(n) {
+  if (!isFinite(n)) return ".000";
+  const s = n.toFixed(3);
+  return n < 1 ? s.replace(/^0/, "") : s;
+}
+
+function balanceColor(dev) {
+  const a = Math.abs(dev);
+  if (a <= 3) return BLUE;
+  if (a <= 6) return BLUE_DK;
+  return "#000000";
+}
+
+function emptyGame(nextNum, roster) {
+  const players = {};
+  roster.forEach((p) => { players[p.name] = { jersey: p.jersey, positions: [null, null, null, null, null, null, null], absent: false }; });
+  return { gameNum: nextNum, date: "", opponent: "", gameType: "Regular Season", players };
+}
+
+const GAME_TYPES = ["Regular Season", "Exhibition", "Tournament", "Playoff"];
+const GAME_TYPE_COLOR = { "Regular Season": BLUE, Exhibition: "#595959", Tournament: "#000000", Playoff: "#000000" };
+
+function blankBattingRow(player) {
+  return { jersey: player.jersey, name: player.name, GP: 0, AB: 0, H: 0, "1B": 0, "2B": 0, "3B": 0, HR: 0, RBI: 0, R: 0, SO: 0, FC: 0 };
+}
+
+function parseGameChangerCSV(text) {
+  const parsed = Papa.parse(text, { skipEmptyLines: true });
+  const rows = parsed.data;
+  if (!rows || rows.length < 3) return { error: "Couldn't read that file — is it a GameChanger stats export?" };
+  const header = rows[1];
+  const gpIndices = header.map((h, i) => (h && h.trim() === "GP" ? i : -1)).filter((i) => i >= 0);
+  if (gpIndices.length === 0) return { error: "Couldn't find the batting columns in that file." };
+  const battingEnd = gpIndices.length > 1 ? gpIndices[1] : header.length;
+  const slice = header.slice(0, battingEnd);
+  function findCol(name) {
+    const idx = slice.findIndex((h) => h && h.trim().toUpperCase() === name.toUpperCase());
+    return idx;
+  }
+  const idx = {
+    number: findCol("Number"), gp: findCol("GP"), ab: findCol("AB"), h: findCol("H"),
+    b1: findCol("1B"), b2: findCol("2B"), b3: findCol("3B"), hr: findCol("HR"),
+    rbi: findCol("RBI"), r: findCol("R"), so: findCol("SO"), fc: findCol("FC"),
+  };
+  if (idx.number === -1 || idx.ab === -1 || idx.h === -1) return { error: "That file doesn't look like a GameChanger batting export." };
+  const results = [];
+  for (let i = 2; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || !row[idx.number] || String(row[idx.number]).trim() === "" || String(row[0]).trim() === "Totals") continue;
+    const jersey = "#" + String(row[idx.number]).trim();
+    results.push({
+      jersey,
+      GP: Number(row[idx.gp]) || 0, AB: Number(row[idx.ab]) || 0, H: Number(row[idx.h]) || 0,
+      "1B": Number(row[idx.b1]) || 0, "2B": Number(row[idx.b2]) || 0, "3B": Number(row[idx.b3]) || 0,
+      HR: Number(row[idx.hr]) || 0, RBI: Number(row[idx.rbi]) || 0, R: Number(row[idx.r]) || 0,
+      SO: Number(row[idx.so]) || 0, FC: idx.fc >= 0 ? (Number(row[idx.fc]) || 0) : 0,
+    });
+  }
+  if (results.length === 0) return { error: "No player rows found in that file." };
+  return { results };
+}
+
+
+
+const BAT_FIELDS = { GP: "gp", AB: "ab", H: "h", "1B": "b1", "2B": "b2", "3B": "b3", HR: "hr", RBI: "rbi", R: "r", SO: "so", FC: "fc" };
+
+function battingRowFromDb(row) {
+  const out = { jersey: row.jersey, name: row.player_name };
+  Object.entries(BAT_FIELDS).forEach(([jsKey, dbKey]) => { out[jsKey] = row[dbKey] || 0; });
+  return out;
+}
+function battingRowToDb(row) {
+  const out = { player_name: row.name, jersey: row.jersey };
+  Object.entries(BAT_FIELDS).forEach(([jsKey, dbKey]) => { out[dbKey] = Number(row[jsKey]) || 0; });
+  return out;
+}
+
+async function loadData() {
+  const [gamesRes, battingRes, playersRes, mvpRes] = await Promise.all([
+    supabase.from("games").select("*").order("game_num", { ascending: true }),
+    supabase.from("batting_stats").select("*"),
+    supabase.from("players").select("*").order("sort_order", { ascending: true }),
+    supabase.from("mvp_awards").select("*").order("awarded_at", { ascending: true }),
+  ]);
+
+  const games = (gamesRes.data || []).map((g) => ({
+    gameNum: g.game_num, date: g.date || "", opponent: g.opponent || "", gameType: g.game_type || "Regular Season", players: g.players || {},
+  }));
+  const batting = (battingRes.data || []).map(battingRowFromDb);
+  const roster = (playersRes.data || []).map((p) => ({ id: p.id, jersey: p.jersey, name: p.name, photoUrl: p.photo_url || null }));
+  const mvpAwards = (mvpRes.data || []).map((a) => ({
+    id: a.id, name: a.player_name, context: a.context, gameNum: a.game_num,
+    practiceDate: a.practice_date, gameLabel: a.game_label, awardedAt: a.awarded_at,
+  }));
+
+  return { games, batting, roster, mvpAwards };
+}
+
+async function saveGames(games) {
+  try {
+    const rows = games.map((g) => ({ game_num: g.gameNum, date: g.date, opponent: g.opponent, game_type: g.gameType || "Regular Season", players: g.players }));
+    const { error } = await supabase.from("games").upsert(rows, { onConflict: "game_num" });
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+async function deleteGameRow(gameNum) {
+  try {
+    const { error } = await supabase.from("games").delete().eq("game_num", gameNum);
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+async function saveBatting(batting) {
+  try {
+    const rows = batting.map(battingRowToDb);
+    const { error } = await supabase.from("batting_stats").upsert(rows, { onConflict: "player_name" });
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+async function saveRosterOrder(roster) {
+  try {
+    const updates = roster.map((p, i) => supabase.from("players").update({ sort_order: i }).eq("id", p.id));
+    await Promise.all(updates);
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+async function addPlayerRow(player, sortOrder) {
+  try {
+    const { data, error } = await supabase.from("players").insert({ jersey: player.jersey, name: player.name, sort_order: sortOrder }).select().single();
+    if (error) throw error;
+    return { id: data.id, jersey: data.jersey, name: data.name, photoUrl: data.photo_url || null };
+  } catch (e) { console.error(e); return null; }
+}
+
+async function uploadPlayerPhoto(playerId, file) {
+  try {
+    const ext = file.name.split(".").pop();
+    const path = `${playerId}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("player-photos").upload(path, file, { upsert: true });
+    if (upErr) throw upErr;
+    const { data } = supabase.storage.from("player-photos").getPublicUrl(path);
+    const photoUrl = data.publicUrl;
+    const { error: dbErr } = await supabase.from("players").update({ photo_url: photoUrl }).eq("id", playerId);
+    if (dbErr) throw dbErr;
+    return { url: photoUrl };
+  } catch (e) { console.error(e); return { error: (e && e.message) || String(e) }; }
+}
+
+async function saveMvpAward(award) {
+  try {
+    const { error } = await supabase.from("mvp_awards").insert({
+      player_name: award.name, context: award.context, game_num: award.gameNum,
+      practice_date: award.practiceDate || null, game_label: award.gameLabel, awarded_at: award.awardedAt,
+    });
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+async function deleteMvpAward(id) {
+  try {
+    const { error } = await supabase.from("mvp_awards").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+
+/* ======================== SMALL UI PIECES ======================== */
+
+function PlayerAvatar({ player, size }) {
+  if (player.photoUrl) {
+    return <img src={player.photoUrl} alt={player.name} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%", background: "#EDEDED", display: "flex", alignItems: "center", justifyContent: "center",
+      color: "#8A8F98", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: size * 0.36, flexShrink: 0
+    }}>
+      {player.name.split(" ").map((w) => w[0]).join("")}
+    </div>
+  );
+}
+
+function getPrimaryPosition(posCounts) {
+  let best = null, bestCount = 0;
+  ALL_POS.forEach((pos) => {
+    const c = posCounts[pos] || 0;
+    if (c > bestCount) { best = pos; bestCount = c; }
+  });
+  return best;
+}
+
+function StatLeaderCard({ label, statKey, ranked, fmt, onViewPlayer }) {
+  const leader = ranked[0];
+  const rest = ranked.slice(1, 4);
+  if (!leader) return null;
+  return (
+    <div style={{ background: `linear-gradient(135deg, #000000, ${BLUE_DK})`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+        <div>
+          <div style={{ color: "rgba(255,255,255,0.75)", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+          <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 34, lineHeight: 1.1, marginTop: 2 }}>{fmt(leader[statKey])}</div>
+          <div style={{ marginTop: 4 }}>
+            <PlayerLink name={leader.name} onViewPlayer={onViewPlayer} style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 600 }}>{leader.name}</PlayerLink>
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 11.5 }}>{leader.primaryPos ? `${leader.primaryPos} · ` : ""}{leader.jersey}</div>
+        </div>
+        <PlayerAvatar player={leader} size={168} />
+      </div>
+      <div style={{ background: "#fff", padding: "6px 6px" }}>
+        {rest.map((p) => (
+          <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px" }}>
+            <PlayerAvatar player={p} size={26} />
+            <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}><PlayerLink name={p.name} onViewPlayer={onViewPlayer} style={{ color: INK }}>{p.name}</PlayerLink></div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 700, color: NAVY }}>{fmt(p[statKey])}</div>
+          </div>
+        ))}
+        {rest.length === 0 && <div style={{ padding: "8px 8px", fontSize: 12, color: "#B0B5BC" }}>Not enough players yet</div>}
+      </div>
+    </div>
+  );
+}
+
+function StandingsSection() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/standings");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setData(json);
+    } catch (e) {
+      setError((e && e.message) || "Couldn't load standings.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, padding: 20, marginTop: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+        <SectionHeading icon={Trophy}>League Standings</SectionHeading>
+        <button onClick={load} style={ghostBtnStyle}><RotateCcw size={13} /> Refresh</button>
+      </div>
+      {loading && <div style={{ color: "#8A8F98", fontSize: 13 }}>Loading standings…</div>}
+      {error && (
+        <div style={{ color: "#000", fontSize: 13 }}>
+          {error} — <a href="https://icbabaseball.ca/Rounds/31986/2026_8_and_Under_T1_Regular_Season/" target="_blank" rel="noreferrer" style={{ color: BLUE_DK }}>view on league site</a>
+        </div>
+      )}
+      {data && data.teams && data.teams.length > 0 && (
+        <>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 640 }}>
+            <thead>
+              <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase" }}>
+                <th style={{ padding: "6px 8px", textAlign: "left" }}>Team</th>
+                <th style={{ padding: "6px 6px" }}>GP</th>
+                <th style={{ padding: "6px 6px" }}>W</th>
+                <th style={{ padding: "6px 6px" }}>L</th>
+                <th style={{ padding: "6px 6px" }}>T</th>
+                <th style={{ padding: "6px 6px" }}>Pts</th>
+                <th style={{ padding: "6px 6px" }}>W %</th>
+                <th style={{ padding: "6px 6px" }}>L10</th>
+                <th style={{ padding: "6px 6px" }}>Strk</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.teams.map((t, i) => {
+                const isPanthers = (t.team || "").toLowerCase().includes("kitchener");
+                return (
+                  <tr key={i} style={{ borderTop: "1px solid #E7E7E7", background: isPanthers ? "#EEF3F8" : "transparent" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: isPanthers ? 700 : 500 }}>{t.team}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.gp}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.w}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.l}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.t}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right", fontWeight: 700 }}>{t.pts}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right" }}>{t.winPct}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right", color: "#8A8F98" }}>{t.l10}</td>
+                    <td style={{ padding: "6px 6px", textAlign: "right", color: "#8A8F98" }}>{t.streak}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ fontSize: 11, color: "#B0B5BC", marginTop: 8 }}>
+            From the ICBA 8U T1 Regular Season standings{data.updatedAt ? ` · fetched ${new Date(data.updatedAt).toLocaleString()}` : ""}.
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TeamLeadersSection({ battingCalc, fielding, onViewPlayer }) {
+  const enriched = useMemo(() => battingCalc.map((p) => ({
+    ...p,
+    photoUrl: p.photoUrl,
+    primaryPos: fielding[p.name] ? getPrimaryPosition(fielding[p.name].posCounts) : null,
+  })), [battingCalc, fielding]);
+
+  function rankedBy(key) {
+    return [...enriched].filter((p) => p.AB > 0 || key === "SO").sort((a, b) => (b[key] || 0) - (a[key] || 0));
+  }
+
+  const groups = [
+    [{ key: "AVG", label: "Batting Average", fmt: fmtAvg }, { key: "OPS", label: "OPS", fmt: fmtAvg }, { key: "SLG", label: "Slugging", fmt: fmtAvg }],
+    [{ key: "H", label: "Hits", fmt: (v) => String(v) }, { key: "1B", label: "Singles", fmt: (v) => String(v) }, { key: "2B", label: "Doubles", fmt: (v) => String(v) }],
+    [{ key: "3B", label: "Triples", fmt: (v) => String(v) }, { key: "RBI", label: "Runs Batted In", fmt: (v) => String(v) }, { key: "SO", label: "Strikeouts", fmt: (v) => String(v) }],
+    [{ key: "HR", label: "Home Runs", fmt: (v) => String(v) }, { key: "FC", label: "Fielder's Choice", fmt: (v) => String(v) }, { key: "R", label: "Runs", fmt: (v) => String(v) }],
+  ];
+
+  return (
+    <div style={{ background: "#000", borderRadius: 12, padding: 20, marginTop: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <Trophy size={18} color={GOLD} />
+        <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 20 }}>Team Leaders</div>
+      </div>
+      {groups.map((row, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
+          {row.map((s) => <StatLeaderCard key={s.key} label={s.label} statKey={s.key} fmt={s.fmt} ranked={rankedBy(s.key)} onViewPlayer={onViewPlayer} />)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+function StatCard({ label, value, sub, accent }) {
+  return (
+    <div style={{
+      background: "#fff", borderRadius: 10, padding: "16px 18px", flex: "1 1 150px",
+      borderLeft: `4px solid ${accent || GOLD}`, boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+    }}>
+      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8A8F98", fontWeight: 600 }}>{label}</div>
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, color: NAVY, fontWeight: 600, lineHeight: 1.15, marginTop: 2 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: "#8A8F98", marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function BalanceChip({ dev, balance }) {
+  const color = balanceColor(dev);
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, background: color + "1F", color,
+      padding: "3px 9px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif"
+    }}>
+      {balance > 0 ? <TrendingUp size={13} /> : balance < 0 ? <TrendingDown size={13} /> : <Minus size={13} />}
+      {balance > 0 ? `+${balance} IF` : balance < 0 ? `${Math.abs(balance)} OF` : "Even"}
+    </span>
+  );
+}
+
+function FieldBar({ ofPct, ifPct, sitPct }) {
+  return (
+    <div style={{ display: "flex", height: 10, width: "100%", minWidth: 90, borderRadius: 5, overflow: "hidden", background: "#E2E2E2" }}>
+      <div style={{ width: `${ifPct * 100}%`, background: INF_BLUE }} title={`Infield ${(ifPct * 100).toFixed(0)}%`} />
+      <div style={{ width: `${ofPct * 100}%`, background: FIELD_GREEN }} title={`Outfield ${(ofPct * 100).toFixed(0)}%`} />
+    </div>
+  );
+}
+
+function SectionHeading({ children, icon: Icon }) {
+  return (
+    <h2 style={{
+      fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20, color: NAVY,
+      display: "flex", alignItems: "center", gap: 8, margin: "0 0 12px 0", letterSpacing: "0.01em"
+    }}>
+      {Icon && <Icon size={18} color={GOLD} />} {children}
+    </h2>
+  );
+}
+
+/* ======================== DASHBOARD TAB ======================== */
+
+function jerseyNum(jersey) {
+  return parseInt(String(jersey || "").replace("#", ""), 10) || 0;
+}
+
+function PlayerLink({ name, onViewPlayer, children, style }) {
+  return (
+    <span onClick={() => onViewPlayer && onViewPlayer(name)} style={{ cursor: onViewPlayer ? "pointer" : "default", color: onViewPlayer ? BLUE_DK : "inherit", textDecoration: onViewPlayer ? "none" : "none", ...style }}
+      onMouseEnter={(e) => { if (onViewPlayer) e.currentTarget.style.textDecoration = "underline"; }}
+      onMouseLeave={(e) => { if (onViewPlayer) e.currentTarget.style.textDecoration = "none"; }}>
+      {children}
+    </span>
+  );
+}
+
+function DashboardTab({ games, batting, roster, onViewPlayer }) {
+  const [typeFilter, setTypeFilter] = useState(["Regular Season"]);
+  const filteredGames = useMemo(
+    () => games.filter((g) => typeFilter.includes(g.gameType || "Regular Season")),
+    [games, typeFilter]
+  );
+  const { rows: fielding, meanBalance } = useMemo(() => computeFielding(filteredGames, roster), [filteredGames, roster]);
+  const battingCalc = useMemo(() => {
+    const photoByName = Object.fromEntries(roster.map((p) => [p.name, p.photoUrl]));
+    return computeBatting(batting).map((p) => ({ ...p, photoUrl: photoByName[p.name] || null })).sort((a, b) => b.AVG - a.AVG);
+  }, [batting, roster]);
+  const [sortKey, setSortKey] = useState("AVG");
+  const [sortDir, setSortDir] = useState(-1);
+  const [fieldSortKey, setFieldSortKey] = useState("jerseyNum");
+  const [fieldSortDir, setFieldSortDir] = useState(1);
+
+  function toggleType(t) {
+    setTypeFilter((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
+  }
+
+  const sortedBatting = useMemo(() => {
+    const arr = [...battingCalc];
+    arr.sort((a, b) => (a[sortKey] - b[sortKey]) * sortDir);
+    return arr;
+  }, [battingCalc, sortKey, sortDir]);
+
+  const fieldingRows = useMemo(() => roster.map((p) => {
+    const r = fielding[p.name] || {};
+    const posValues = {};
+    ALL_POS.forEach((pos) => { posValues[pos] = (r.posCounts && r.posCounts[pos]) || 0; });
+    return {
+      jersey: p.jersey, name: p.name, jerseyNum: jerseyNum(p.jersey), posCounts: r.posCounts || {},
+      of: r.of || 0, if: r.if || 0, sit: r.sit || 0, total: r.total || 0,
+      ofPct: r.ofPct || 0, ifPct: r.ifPct || 0, sitPct: r.sitPct || 0, deviation: r.deviation || 0, balance: r.balance || 0,
+      ...posValues,
+    };
+  }), [roster, fielding]);
+
+  const sortedFielding = useMemo(() => {
+    const arr = [...fieldingRows];
+    arr.sort((a, b) => {
+      const av = a[fieldSortKey], bv = b[fieldSortKey];
+      if (typeof av === "string") return av.localeCompare(bv) * fieldSortDir;
+      return ((av || 0) - (bv || 0)) * fieldSortDir;
+    });
+    return arr;
+  }, [fieldingRows, fieldSortKey, fieldSortDir]);
+
+  function fieldHeaderClick(key) {
+    if (fieldSortKey === key) setFieldSortDir((d) => -d);
+    else { setFieldSortKey(key); setFieldSortDir(key === "jerseyNum" || key === "name" ? 1 : -1); }
+  }
+
+  const gamesPlayed = games.length;
+  const lastGame = games[games.length - 1];
+
+  function headerClick(key) {
+    if (sortKey === key) setSortDir((d) => -d);
+    else { setSortKey(key); setSortDir(-1); }
+  }
+  const cols = [
+    ["AVG", "AVG"], ["OBP", "OBP"], ["OPS", "OPS"], ["SLG", "SLG"], ["H", "H"], ["1B", "1B"], ["2B", "2B"], ["3B", "3B"], ["HR", "HR"], ["RBI", "RBI"], ["R", "R"], ["SO", "SO"], ["FC", "FC"],
+  ];
+
+  return (
+    <div>
+      <div style={{
+        background: `linear-gradient(120deg, #000000, ${BLUE_DK})`, borderRadius: 12, padding: "20px 24px",
+        color: "#fff", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14
+      }}>
+        <div>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.18em", fontSize: 12, color: GOLD, fontWeight: 700 }}>KITCHENER PANTHERS · U8 TIER 1</div>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, letterSpacing: "0.02em" }}>2026 SEASON TRACKER</div>
+        </div>
+        <div style={{ display: "flex", gap: 22, textAlign: "right" }}>
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Games</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 24, fontWeight: 600 }}>{gamesPlayed}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Last Game</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 16, fontWeight: 500 }}>{lastGame ? lastGame.date : "—"}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, marginBottom: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+          <SectionHeading icon={LayoutDashboard}>Fielding Summary</SectionHeading>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {GAME_TYPES.map((t) => {
+              const on = typeFilter.includes(t);
+              return (
+                <button key={t} onClick={() => toggleType(t)} style={{
+                  fontSize: 11.5, fontWeight: 600, padding: "5px 11px", borderRadius: 999, cursor: "pointer",
+                  border: `1px solid ${on ? "#000" : "#D5D5D5"}`, background: on ? "#000" : "#fff", color: on ? "#fff" : "#8A8F98",
+                }}>{t}</button>
+              );
+            })}
+          </div>
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 1180 }}>
+          <thead>
+            <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              <th onClick={() => fieldHeaderClick("jerseyNum")} style={{ padding: "6px 6px", textAlign: "left", cursor: "pointer", userSelect: "none", position: "sticky", left: 0, background: "#fff", width: 40, zIndex: 2 }}>
+                # {fieldSortKey === "jerseyNum" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}
+              </th>
+              <th onClick={() => fieldHeaderClick("name")} style={{ padding: "6px 6px", textAlign: "left", cursor: "pointer", userSelect: "none", position: "sticky", left: 40, background: "#fff", minWidth: 140, zIndex: 2, boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>
+                Player {fieldSortKey === "name" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}
+              </th>
+              {OUTFIELD.map((pos) => (
+                <th key={pos} onClick={() => fieldHeaderClick(pos)} style={{ padding: "6px 5px", cursor: "pointer", userSelect: "none" }}>{pos} {fieldSortKey === pos ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              ))}
+              {INFIELD.map((pos) => (
+                <th key={pos} onClick={() => fieldHeaderClick(pos)} style={{ padding: "6px 5px", cursor: "pointer", userSelect: "none" }}>{pos} {fieldSortKey === pos ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              ))}
+              <th onClick={() => fieldHeaderClick("of")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>OF Total {fieldSortKey === "of" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("ofPct")} style={{ padding: "6px 6px", cursor: "pointer", userSelect: "none" }}>OF % {fieldSortKey === "ofPct" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("if")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>IF Total {fieldSortKey === "if" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("ifPct")} style={{ padding: "6px 6px", cursor: "pointer", userSelect: "none" }}>IF % {fieldSortKey === "ifPct" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("deviation")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>Balance {fieldSortKey === "deviation" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("sit")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>SIT {fieldSortKey === "sit" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("sitPct")} style={{ padding: "6px 6px", cursor: "pointer", userSelect: "none" }}>SIT % {fieldSortKey === "sitPct" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+              <th onClick={() => fieldHeaderClick("total")} style={{ padding: "6px 6px", borderLeft: "1px solid #E7E7E7", cursor: "pointer", userSelect: "none" }}>Total {fieldSortKey === "total" ? (fieldSortDir === 1 ? "▲" : "▼") : ""}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedFielding.map((r) => (
+              <tr key={r.name} style={{ borderTop: "1px solid #E7E7E7" }}>
+                <td style={{ padding: "7px 6px", color: "#8A8F98", position: "sticky", left: 0, background: "#fff" }}>{r.jersey}</td>
+                <td style={{ padding: "7px 6px", fontWeight: 600, color: INK, whiteSpace: "nowrap", position: "sticky", left: 40, background: "#fff", boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>
+                  <PlayerLink name={r.name} onViewPlayer={onViewPlayer}>{r.name}</PlayerLink>
+                </td>
+                {OUTFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
+                {INFIELD.map((pos) => <td key={pos} style={{ padding: "7px 5px", textAlign: "right", color: (r.posCounts[pos] || 0) ? INK : "#D5D5D5" }}>{r.posCounts[pos] || 0}</td>)}
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.of}</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ofPct * 100)}%</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.if}</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.ifPct * 100)}%</td>
+                <td style={{ padding: "7px 6px", borderLeft: "1px solid #E7E7E7" }}><BalanceChip dev={r.deviation} balance={r.balance} /></td>
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", color: "#8A8F98" }}>{r.sit}</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", color: "#8A8F98" }}>{Math.round(r.sitPct * 100)}%</td>
+                <td style={{ padding: "7px 6px", textAlign: "right", borderLeft: "1px solid #E7E7E7", fontWeight: 700 }}>{r.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ fontSize: 11.5, color: "#8A8F98", marginTop: 10 }}>
+          {filteredGames.length === 0
+            ? "No games match the selected filters."
+            : <>Showing {filteredGames.length} of {games.length} logged games ({typeFilter.join(", ")}). Balance chip compares each player's IF−OF split against the team average ({meanBalance >= 0 ? "+" : ""}{meanBalance.toFixed(1)}) — darker means further from the team.</>
+          }
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
+        <SectionHeading icon={TrendingUp}>Batting Summary</SectionHeading>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 900 }}>
+          <thead>
+            <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <th style={{ padding: "6px 8px", textAlign: "left", position: "sticky", left: 0, background: "#fff", width: 40, zIndex: 2 }}>#</th>
+              <th style={{ padding: "6px 8px", textAlign: "left", position: "sticky", left: 40, background: "#fff", minWidth: 140, zIndex: 2, boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>Player</th>
+              <th style={{ padding: "6px 8px" }}>GP</th>
+              <th style={{ padding: "6px 8px" }}>AB</th>
+              {cols.map(([key, label]) => (
+                <th key={key} onClick={() => headerClick(key)} style={{ padding: "6px 8px", cursor: "pointer", userSelect: "none" }}>
+                  {label} {sortKey === key ? (sortDir === -1 ? "▼" : "▲") : ""}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sortedBatting.map((p) => (
+              <tr key={p.name} style={{ borderTop: "1px solid #E7E7E7" }}>
+                <td style={{ padding: "8px", color: "#8A8F98", position: "sticky", left: 0, background: "#fff" }}>{p.jersey}</td>
+                <td style={{ padding: "8px", fontWeight: 600, position: "sticky", left: 40, background: "#fff", boxShadow: "2px 0 2px -1px rgba(0,0,0,0.06)" }}>
+                  <PlayerLink name={p.name} onViewPlayer={onViewPlayer}>{p.name}</PlayerLink>
+                </td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.GP}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.AB}</td>
+                <td style={{ padding: "8px", textAlign: "right", fontWeight: 700, color: NAVY }}>{fmtAvg(p.AVG)}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{fmtAvg(p.OBP)}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{fmtAvg(p.OPS)}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{fmtAvg(p.SLG)}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.H}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p["1B"]}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p["2B"]}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p["3B"]}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.HR}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.RBI}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.R}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.SO}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{p.FC || 0}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <TeamLeadersSection battingCalc={battingCalc} fielding={fielding} onViewPlayer={onViewPlayer} />
+      <StandingsSection />
+    </div>
+  );
+}
+
+/* ======================== PLAYERS TAB ======================== */
+
+function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, onUploadPhoto }) {
+  const regularGames = useMemo(() => games.filter((g) => (g.gameType || "Regular Season") === "Regular Season"), [games]);
+  const { rows: fielding } = useMemo(() => computeFielding(regularGames, roster), [regularGames, roster]);
+  const r = fielding[player.name];
+  const pieData = [
+    { name: "Infield", value: r.if, color: INF_BLUE },
+    { name: "Outfield", value: r.of, color: FIELD_GREEN },
+    { name: "Bench", value: r.sit, color: SIT_GRAY },
+  ].filter((d) => d.value > 0);
+  const pieTotal = pieData.reduce((s, d) => s + d.value, 0);
+
+  const posBarData = ALL_POS.map((pos) => ({ pos, innings: r.posCounts[pos] || 0 })).filter((d) => d.innings > 0);
+  const b = battingRow ? computeBatting([battingRow])[0] : null;
+  const [uploading, setUploading] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const fileInputRef = React.useRef(null);
+  const captureRef = React.useRef(null);
+
+  const attendancePct = regularGames.length ? Math.round((r.gamesPlayed / regularGames.length) * 100) : 0;
+  const primaryPos = getPrimaryPosition(r.posCounts);
+  const playerMvpCount = (mvpAwards || []).filter((a) => a.name === player.name).length;
+  const exportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  async function handleDownloadPdf() {
+    if (!captureRef.current) return;
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(captureRef.current, {
+        scale: 2.5, backgroundColor: "#ffffff", useCORS: true,
+        ignoreElements: (el) => el.classList && el.classList.contains("no-print"),
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "in", format: "letter" });
+      const pageW = 8.5, pageH = 11, margin = 0.35;
+      const availW = pageW - margin * 2, availH = pageH - margin * 2;
+      const ratio = canvas.width / canvas.height;
+      let drawW = availW, drawH = availW / ratio;
+      if (drawH > availH) { drawH = availH; drawW = availH * ratio; }
+      const x = margin + (availW - drawW) / 2;
+      const y = margin + (availH - drawH) / 2;
+      pdf.addImage(imgData, "PNG", x, y, drawW, drawH);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const nameStr = player.name.replace(/\s+/g, "_");
+      pdf.save(`Player_Summary_${dateStr}_${nameStr}.pdf`);
+    } catch (e) {
+      window.alert("Couldn't generate the PDF:\n\n" + ((e && e.message) || String(e)));
+    }
+    setExportingPdf(false);
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !onUploadPhoto) return;
+    setUploading(true);
+    const result = await onUploadPhoto(player.id, file);
+    setUploading(false);
+    if (result && result.error) {
+      window.alert("Photo upload failed:\n\n" + result.error);
+    }
+    e.target.value = "";
+  }
+
+  const gameLog = regularGames.map((g) => {
+    const entry = g.players[player.name];
+    const positions = (entry && entry.positions) || [];
+    const played = positions.some((v) => !!v);
+    return { ...g, positions, played };
+  });
+
+  const battingFieldsRow1 = ["GP", "AB", "AVG", "OBP", "OPS", "SLG"];
+  const battingFieldsRow2 = ["H", "1B", "2B", "3B", "HR", "RBI", "R", "SO", "FC"];
+  function battingChip(k) {
+    const isAvgStat = k === "AVG" || k === "OBP" || k === "OPS" || k === "SLG";
+    const v = b ? (isAvgStat ? fmtAvg(b[k]) : (b[k] != null ? b[k] : 0)) : (isAvgStat ? fmtAvg(0) : 0);
+    return (
+      <div key={k} style={{ background: "#F4F6F8", borderTop: `3px solid ${BLUE}`, borderRadius: "0 0 8px 8px", padding: "7px 12px", minWidth: 56, textAlign: "center" }}>
+        <div style={{ fontSize: 10, color: "#8A8F98", textTransform: "uppercase", fontWeight: 700 }}>{k}</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, color: NAVY, fontWeight: 600 }}>{v}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, padding: 22, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+      <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <button onClick={handleDownloadPdf} disabled={exportingPdf} style={primaryBtnStyle}>
+          {exportingPdf ? <Loader2 size={15} className="spin" /> : <Printer size={15} />} {exportingPdf ? "Generating…" : "Download PDF"}
+        </button>
+      </div>
+      <div ref={captureRef}>
+      <div style={{ position: "relative", height: 285, marginBottom: 18 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 190, borderRadius: 10, overflow: "hidden", background: CARD_INK }}>
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "72%", background: BLUE, clipPath: "polygon(18% 0, 100% 0, 100% 100%, 0% 100%)" }} />
+          <div aria-hidden="true" style={{ position: "absolute", right: 8, bottom: -30, fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 170, color: BLUE_DK, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
+            {(player.jersey || "").replace("#", "")}
+          </div>
           <div style={{ position: "absolute", top: 14, right: -38, transform: "rotate(45deg)", background: CARD_GOLD, color: "#3A2E05", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: "0.08em", padding: "3px 44px", textAlign: "center" }}>
             2026 SEASON
           </div>
