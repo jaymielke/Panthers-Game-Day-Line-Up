@@ -838,58 +838,71 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
         </button>
       </div>
       <div ref={captureRef}>
-      <div style={{ position: "relative", height: 210, borderRadius: 10, overflow: "hidden", marginBottom: 18, background: CARD_INK }}>
-        <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "72%", background: BLUE, clipPath: "polygon(18% 0, 100% 0, 100% 100%, 0% 100%)" }} />
-        <div aria-hidden="true" style={{ position: "absolute", right: 10, bottom: -34, fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 190, color: BLUE_DK, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
-          {(player.jersey || "").replace("#", "")}
-        </div>
-        <div style={{ position: "absolute", top: 14, right: -38, transform: "rotate(45deg)", background: CARD_GOLD, color: "#3A2E05", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: "0.08em", padding: "3px 44px", textAlign: "center" }}>
-          2026 SEASON
-        </div>
-        <div style={{ position: "absolute", top: 14, left: 16, display: "flex", alignItems: "center", gap: 8 }}>
-          <img src={PANTHERS_LOGO} alt="" style={{ width: 26, height: 26, objectFit: "contain" }} />
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: "#fff", fontWeight: 800, fontSize: 13, letterSpacing: "0.06em", lineHeight: 1.25 }}>
-            KITCHENER<br /><span style={{ color: BLUE }}>PANTHERS</span>
+      <div style={{ position: "relative", height: 285, marginBottom: 18 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 190, borderRadius: 10, overflow: "hidden", background: CARD_INK }}>
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "72%", background: BLUE, clipPath: "polygon(18% 0, 100% 0, 100% 100%, 0% 100%)" }} />
+          <div aria-hidden="true" style={{ position: "absolute", right: 8, bottom: -30, fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 170, color: BLUE_DK, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
+            {(player.jersey || "").replace("#", "")}
+          </div>
+          <div style={{ position: "absolute", top: 14, right: -38, transform: "rotate(45deg)", background: CARD_GOLD, color: "#3A2E05", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: "0.08em", padding: "3px 44px", textAlign: "center" }}>
+            2026 SEASON
+          </div>
+          <div style={{ position: "absolute", top: 12, left: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={PANTHERS_LOGO} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: "#fff", fontWeight: 800, fontSize: 12, letterSpacing: "0.06em", lineHeight: 1.25 }}>
+              KITCHENER<br /><span style={{ color: BLUE }}>PANTHERS</span>
+            </div>
+          </div>
+
+          <div style={{ position: "absolute", left: 258, top: 54, right: 16 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{player.name}</div>
+            <div style={{ color: CARD_GOLD, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginTop: 6, textTransform: "uppercase" }}>
+              {player.jersey} · {primaryPos ? POS_LABELS[primaryPos] : "Panthers"}
+            </div>
+          </div>
+
+          <div style={{ position: "absolute", left: 258, bottom: 16, right: 16, display: "flex", gap: 8 }}>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", color: "#fff", fontSize: 19, fontWeight: 600 }}>{attendancePct}%</div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Games played</div>
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", color: "#fff", fontSize: 19, fontWeight: 600 }}>{primaryPos || "—"}</div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>Primary position</div>
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "'Oswald', sans-serif", color: "#fff", fontSize: 19, fontWeight: 600 }}>
+                {r.balance > 0 ? <TrendingUp size={15} color="#8FD19E" /> : r.balance < 0 ? <TrendingDown size={15} color="#F2A7A7" /> : <Minus size={15} color="#CFD8E3" />}
+                {r.balance > 0 ? `+${r.balance}` : r.balance < 0 ? `${Math.abs(r.balance)}` : "Even"}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {r.balance > 0 ? "IF trend" : r.balance < 0 ? "OF trend" : "Balanced"}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div style={{ position: "absolute", left: 16, bottom: 16, width: 96, height: 96 }}>
+        <div style={{ position: "absolute", left: 20, top: 50, width: 235, height: 235 }}>
           {player.photoUrl ? (
-            <img src={player.photoUrl} alt={player.name} style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", border: "4px solid #fff" }} />
+            <img src={player.photoUrl} alt={player.name} style={{ width: 235, height: 235, borderRadius: "50%", objectFit: "cover", border: "6px solid #fff" }} />
           ) : (
-            <div style={{ width: 96, height: 96, borderRadius: "50%", background: CARD_INK, border: "4px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", color: BLUE, fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700 }}>
+            <div style={{ width: 235, height: 235, borderRadius: "50%", background: "#fff", border: "6px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", color: BLUE, fontFamily: "'Oswald', sans-serif", fontSize: 74, fontWeight: 700 }}>
               {player.name.split(" ").map((w) => w[0]).join("")}
             </div>
           )}
           {onUploadPhoto && (
             <button className="no-print" onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
-              position: "absolute", bottom: -4, right: -4, width: 32, height: 32, borderRadius: "50%", background: CARD_GOLD, border: "3px solid #fff",
+              position: "absolute", bottom: 6, right: 6, width: 40, height: 40, borderRadius: "50%", background: CARD_GOLD, border: "4px solid #fff",
               display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: CARD_INK
             }}>
-              {uploading ? <Loader2 size={14} className="spin" /> : <PlusCircle size={14} />}
+              {uploading ? <Loader2 size={16} className="spin" /> : <PlusCircle size={16} />}
             </button>
           )}
           <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
         </div>
-
-        <div style={{ position: "absolute", left: 128, bottom: 20, right: 16 }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 32, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{player.name}</div>
-          <div style={{ color: CARD_GOLD, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginTop: 6, textTransform: "uppercase" }}>
-            {player.jersey} · {primaryPos ? POS_LABELS[primaryPos] : "Panthers"}
-          </div>
-        </div>
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18, alignItems: "center" }}>
-        <BalanceChip dev={r.deviation} balance={r.balance} />
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
-          {r.gamesPlayed}/{regularGames.length} games played ({attendancePct}%)
-        </span>
-        {primaryPos && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
-            Primary position: {primaryPos}
-          </span>
-        )}
         {playerMvpCount > 0 && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: CARD_INK, color: CARD_GOLD, padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
             <Trophy size={12} color={CARD_GOLD} /> {playerMvpCount} MVP award{playerMvpCount > 1 ? "s" : ""} this season
