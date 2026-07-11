@@ -38,6 +38,12 @@ const SEED_BATTING = [{"jersey":"#28","name":"Eli Herman","GP":17,"AB":55,"H":42
 /* ======================== CONSTANTS ======================== */
 
 const INFIELD = ["P", "C", "1B", "2B", "3B", "SS"];
+const STAT_GLOSSARY = [
+  ["GP", "Games Played"], ["AB", "At Bats"], ["AVG", "Batting Average"], ["OBP", "On-Base %"],
+  ["OPS", "OBP + Slugging"], ["SLG", "Slugging %"], ["H", "Hits"], ["1B", "Singles"],
+  ["2B", "Doubles"], ["3B", "Triples"], ["HR", "Home Runs"], ["RBI", "Runs Batted In"],
+  ["R", "Runs Scored"], ["SO", "Strikeouts"], ["FC", "Fielder's Choice"],
+];
 const OUTFIELD = ["LF", "LC", "RC", "RF"];
 const ALL_POS = [...INFIELD, ...OUTFIELD];
 const POS_LABELS = { P:"Pitcher", C:"Catcher", "1B":"First Base", "2B":"Second Base", "3B":"Third Base", SS:"Shortstop", LF:"Left Field", LC:"Left Center", RC:"Right Center", RF:"Right Field", SIT:"Bench" };
@@ -740,8 +746,9 @@ function DashboardTab({ games, batting, roster, onViewPlayer }) {
 
 /* ======================== PLAYERS TAB ======================== */
 
-function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
-  const { rows: fielding } = useMemo(() => computeFielding(games, roster), [games, roster]);
+function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, onUploadPhoto }) {
+  const regularGames = useMemo(() => games.filter((g) => (g.gameType || "Regular Season") === "Regular Season"), [games]);
+  const { rows: fielding } = useMemo(() => computeFielding(regularGames, roster), [regularGames, roster]);
   const r = fielding[player.name];
   const pieData = [
     { name: "Infield", value: r.if, color: INF_BLUE },
@@ -756,6 +763,11 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
   const [exportingPdf, setExportingPdf] = useState(false);
   const fileInputRef = React.useRef(null);
   const captureRef = React.useRef(null);
+
+  const attendancePct = regularGames.length ? Math.round((r.gamesPlayed / regularGames.length) * 100) : 0;
+  const primaryPos = getPrimaryPosition(r.posCounts);
+  const playerMvpCount = (mvpAwards || []).filter((a) => a.name === player.name).length;
+  const exportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
   async function handleDownloadPdf() {
     if (!captureRef.current) return;
@@ -796,7 +808,7 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
     e.target.value = "";
   }
 
-  const gameLog = games.map((g) => {
+  const gameLog = regularGames.map((g) => {
     const entry = g.players[player.name];
     const positions = (entry && entry.positions) || [];
     const played = positions.some((v) => !!v);
@@ -844,9 +856,27 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
           <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
         </div>
         <div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 13 }}>{player.jersey} · KITCHENER PANTHERS</div>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 34, color: NAVY, fontWeight: 700, marginBottom: 8 }}>{player.name}</div>
-          <BalanceChip dev={r.deviation} balance={r.balance} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+            <img src={PANTHERS_LOGO} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 13 }}>{player.jersey} · KITCHENER PANTHERS</div>
+          </div>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 34, color: NAVY, fontWeight: 700, marginBottom: 10 }}>{player.name}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <BalanceChip dev={r.deviation} balance={r.balance} />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+              {r.gamesPlayed}/{regularGames.length} games played ({attendancePct}%)
+            </span>
+            {primaryPos && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+                Primary position: {primaryPos}
+              </span>
+            )}
+            {playerMvpCount > 0 && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#000", color: "#fff", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <Trophy size={12} color={GOLD} /> {playerMvpCount} MVP award{playerMvpCount > 1 ? "s" : ""} this season
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -870,9 +900,9 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
             <BarChart data={posBarData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E7E7E7" />
               <XAxis dataKey="pos" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2) || 5]} />
               <Tooltip />
-              <Bar dataKey="innings">
+              <Bar dataKey="innings" label={{ position: "top", fontSize: 11, fontWeight: 700, fill: INK }}>
                 {posBarData.map((d, i) => <Cell key={i} fill={POS_COLOR[d.pos]} />)}
               </Bar>
             </BarChart>
@@ -880,13 +910,23 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
         </div>
       </div>
 
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line</div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-          {battingFieldsRow1.map(battingChip)}
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
+        <div style={{ flex: "2 1 380px", minWidth: 320 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+            {battingFieldsRow1.map(battingChip)}
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {battingFieldsRow2.map(battingChip)}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {battingFieldsRow2.map(battingChip)}
+        <div style={{ flex: "1 1 220px", minWidth: 200 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>What the abbreviations mean</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px 14px", fontSize: 11.5, color: "#5A5F66", background: PAPER, borderRadius: 8, padding: "10px 12px" }}>
+            {STAT_GLOSSARY.map(([abbr, full]) => (
+              <div key={abbr}><b style={{ color: INK }}>{abbr}</b> = {full}</div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -921,12 +961,18 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
           </table>
         </div>
       </div>
+
+      <div style={{ marginTop: 22, paddingTop: 14, borderTop: "1px solid #E7E7E7", textAlign: "center" }}>
+        <div style={{ fontSize: 11, color: "#B0B5BC" }}>
+          Kitchener Panthers · 2026 U8 Tier 1 · Statistics reflect regular season games only, as of {exportDate}.
+        </div>
+      </div>
       </div>
     </div>
   );
 }
 
-function PlayersTab({ games, batting, roster, onUploadPhoto, initialPlayerName, onConsumeInitialPlayer }) {
+function PlayersTab({ games, batting, roster, mvpAwards, onUploadPhoto, initialPlayerName, onConsumeInitialPlayer }) {
   const [selected, setSelected] = useState(null);
   const { rows: fielding } = useMemo(() => computeFielding(games, roster), [games, roster]);
   const battingByName = useMemo(() => Object.fromEntries(batting.map((b) => [b.name, b])), [batting]);
@@ -948,7 +994,7 @@ function PlayersTab({ games, batting, roster, onUploadPhoto, initialPlayerName, 
         }}>
           <ChevronRight style={{ transform: "rotate(180deg)" }} size={16} /> All Players
         </button>
-        <PlayerDetail player={selected} games={games} roster={roster} battingRow={battingByName[selected.name]} onUploadPhoto={onUploadPhoto} />
+        <PlayerDetail player={selected} games={games} roster={roster} batting={batting} battingRow={battingByName[selected.name]} mvpAwards={mvpAwards} onUploadPhoto={onUploadPhoto} />
       </div>
     );
   }
@@ -1930,7 +1976,7 @@ export default function App({ onSignOut }) {
 
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "22px 18px 60px" }}>
         {tab === "dashboard" && <DashboardTab games={games} batting={batting} roster={roster} onViewPlayer={handleViewPlayer} />}
-        {tab === "players" && <PlayersTab games={games} batting={batting} roster={roster} onUploadPhoto={handleUploadPhoto} initialPlayerName={viewPlayerName} onConsumeInitialPlayer={() => setViewPlayerName(null)} />}
+        {tab === "players" && <PlayersTab games={games} batting={batting} roster={roster} mvpAwards={mvpAwards} onUploadPhoto={handleUploadPhoto} initialPlayerName={viewPlayerName} onConsumeInitialPlayer={() => setViewPlayerName(null)} />}
         {tab === "addgame" && <AddGameTab games={games} roster={roster} onSave={handleSaveGames} onDelete={handleDeleteGame} onAddPlayer={handleAddPlayer} onReorderRoster={handleReorderRoster} />}
         {tab === "batting" && <BattingTab batting={batting} roster={roster} onSave={handleSaveBatting} />}
         {tab === "mvp" && <MvpTab games={games} roster={roster} mvpAwards={mvpAwards} onAward={handleAwardMvp} onRemoveAward={handleRemoveMvpAward} />}
