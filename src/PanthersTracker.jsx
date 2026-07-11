@@ -793,32 +793,30 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
         <button onClick={() => window.print()} style={primaryBtnStyle}><Printer size={15} /> Print / Export PDF</button>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-          <div style={{ position: "relative", width: 256, height: 256, flexShrink: 0 }}>
-            {player.photoUrl ? (
-              <img src={player.photoUrl} alt={player.name} style={{ width: 256, height: 256, borderRadius: "50%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: 256, height: 256, borderRadius: "50%", background: PAPER, border: `2px dashed #D5D5D5`, display: "flex", alignItems: "center", justifyContent: "center", color: "#B0B5BC", fontFamily: "'Oswald', sans-serif", fontSize: 64, fontWeight: 700 }}>
-                {player.name.split(" ").map((w) => w[0]).join("")}
-              </div>
-            )}
-            {onUploadPhoto && (
-              <button className="no-print" onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
-                position: "absolute", bottom: 10, right: 10, width: 40, height: 40, borderRadius: "50%", background: BLUE, border: "3px solid #fff",
-                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff"
-              }}>
-                {uploading ? <Loader2 size={18} className="spin" /> : <PlusCircle size={18} />}
-              </button>
-            )}
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
-          </div>
-          <div>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 13 }}>{player.jersey} · KITCHENER PANTHERS</div>
-            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 34, color: NAVY, fontWeight: 700 }}>{player.name}</div>
-          </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginBottom: 18 }}>
+        <div style={{ position: "relative", width: 256, height: 256, flexShrink: 0 }}>
+          {player.photoUrl ? (
+            <img src={player.photoUrl} alt={player.name} style={{ width: 256, height: 256, borderRadius: "50%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: 256, height: 256, borderRadius: "50%", background: PAPER, border: `2px dashed #D5D5D5`, display: "flex", alignItems: "center", justifyContent: "center", color: "#B0B5BC", fontFamily: "'Oswald', sans-serif", fontSize: 64, fontWeight: 700 }}>
+              {player.name.split(" ").map((w) => w[0]).join("")}
+            </div>
+          )}
+          {onUploadPhoto && (
+            <button className="no-print" onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
+              position: "absolute", bottom: 10, right: 10, width: 40, height: 40, borderRadius: "50%", background: BLUE, border: "3px solid #fff",
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff"
+            }}>
+              {uploading ? <Loader2 size={18} className="spin" /> : <PlusCircle size={18} />}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
         </div>
-        <BalanceChip dev={r.deviation} balance={r.balance} />
+        <div>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 13 }}>{player.jersey} · KITCHENER PANTHERS</div>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 34, color: NAVY, fontWeight: 700, marginBottom: 8 }}>{player.name}</div>
+          <BalanceChip dev={r.deviation} balance={r.balance} />
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
