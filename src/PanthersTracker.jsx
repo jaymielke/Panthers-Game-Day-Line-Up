@@ -452,6 +452,7 @@ function TeamLeadersSection({ battingCalc, fielding, onViewPlayer }) {
     [{ key: "AVG", label: "Batting Average", fmt: fmtAvg }, { key: "OPS", label: "OPS", fmt: fmtAvg }, { key: "SLG", label: "Slugging", fmt: fmtAvg }],
     [{ key: "H", label: "Hits", fmt: (v) => String(v) }, { key: "1B", label: "Singles", fmt: (v) => String(v) }, { key: "2B", label: "Doubles", fmt: (v) => String(v) }],
     [{ key: "3B", label: "Triples", fmt: (v) => String(v) }, { key: "RBI", label: "Runs Batted In", fmt: (v) => String(v) }, { key: "SO", label: "Strikeouts", fmt: (v) => String(v) }],
+    [{ key: "HR", label: "Home Runs", fmt: (v) => String(v) }, { key: "FC", label: "Fielder's Choice", fmt: (v) => String(v) }, { key: "R", label: "Runs", fmt: (v) => String(v) }],
   ];
 
   return (
@@ -752,7 +753,36 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
   const posBarData = ALL_POS.map((pos) => ({ pos, innings: r.posCounts[pos] || 0 })).filter((d) => d.innings > 0);
   const b = battingRow ? computeBatting([battingRow])[0] : null;
   const [uploading, setUploading] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const fileInputRef = React.useRef(null);
+  const captureRef = React.useRef(null);
+
+  async function handleDownloadPdf() {
+    if (!captureRef.current) return;
+    setExportingPdf(true);
+    try {
+      const canvas = await html2canvas(captureRef.current, {
+        scale: 2.5, backgroundColor: "#ffffff", useCORS: true,
+        ignoreElements: (el) => el.classList && el.classList.contains("no-print"),
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "in", format: "letter" });
+      const pageW = 8.5, pageH = 11, margin = 0.35;
+      const availW = pageW - margin * 2, availH = pageH - margin * 2;
+      const ratio = canvas.width / canvas.height;
+      let drawW = availW, drawH = availW / ratio;
+      if (drawH > availH) { drawH = availH; drawW = availH * ratio; }
+      const x = margin + (availW - drawW) / 2;
+      const y = margin + (availH - drawH) / 2;
+      pdf.addImage(imgData, "PNG", x, y, drawW, drawH);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const nameStr = player.name.replace(/\s+/g, "_");
+      pdf.save(`Player_Summary_${dateStr}_${nameStr}.pdf`);
+    } catch (e) {
+      window.alert("Couldn't generate the PDF:\n\n" + ((e && e.message) || String(e)));
+    }
+    setExportingPdf(false);
+  }
 
   async function handlePhotoChange(e) {
     const file = e.target.files && e.target.files[0];
@@ -788,11 +818,12 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
 
   return (
     <div style={{ background: "#fff", borderRadius: 12, padding: 22, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
-      <style>{`@media print { .no-print { display: none !important; } }`}</style>
       <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-        <button onClick={() => window.print()} style={primaryBtnStyle}><Printer size={15} /> Print / Export PDF</button>
+        <button onClick={handleDownloadPdf} disabled={exportingPdf} style={primaryBtnStyle}>
+          {exportingPdf ? <Loader2 size={15} className="spin" /> : <Printer size={15} />} {exportingPdf ? "Generating…" : "Download PDF"}
+        </button>
       </div>
-
+      <div ref={captureRef}>
       <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginBottom: 18 }}>
         <div style={{ position: "relative", width: 256, height: 256, flexShrink: 0 }}>
           {player.photoUrl ? (
@@ -821,10 +852,10 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
         <div style={{ flex: "1 1 260px", minWidth: 260 }}>
-          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 6, fontWeight: 600 }}>Fielding Breakdown</div>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
-              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={68} paddingAngle={2} labelLine={false}
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 14, fontWeight: 600 }}>Fielding Breakdown</div>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart margin={{ top: 30, right: 30, bottom: 10, left: 30 }}>
+              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={62} paddingAngle={2} labelLine={false}
                 label={({ name, value }) => `${name}: ${value} (${pieTotal ? Math.round((value / pieTotal) * 100) : 0}%)`}>
                 {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
               </Pie>
@@ -870,15 +901,15 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
               </tr>
             </thead>
             <tbody>
-              {gameLog.map((g) => (
-                <tr key={g.gameNum} style={{ borderTop: "1px solid #E7E7E7" }}>
-                  <td style={{ padding: "5px 6px", color: "#8A8F98" }}>{g.gameNum}</td>
-                  <td style={{ padding: "5px 6px" }}>{g.date}</td>
-                  <td style={{ padding: "5px 6px" }}>{g.opponent}</td>
+              {gameLog.map((g, i) => (
+                <tr key={g.gameNum} style={{ borderTop: "1px solid #C7C7C7", background: i % 2 === 1 ? "#F7F7F5" : "#fff" }}>
+                  <td style={{ padding: "6px 6px", color: "#8A8F98" }}>{g.gameNum}</td>
+                  <td style={{ padding: "6px 6px" }}>{g.date}</td>
+                  <td style={{ padding: "6px 6px" }}>{g.opponent}</td>
                   {!g.played ? (
-                    <td colSpan={7} style={{ padding: "5px 6px", textAlign: "center", color: "#B0B5BC", fontStyle: "italic" }}>Absent</td>
+                    <td colSpan={7} style={{ padding: "6px 6px", textAlign: "center", color: "#B0B5BC", fontStyle: "italic" }}>Absent</td>
                   ) : g.positions.map((pos, i) => (
-                    <td key={i} style={{ padding: "4px 4px", textAlign: "center" }}>
+                    <td key={i} style={{ padding: "5px 4px", textAlign: "center" }}>
                       {pos ? (
                         <span style={{ background: (POS_COLOR[pos] || SIT_GRAY) + (pos === "SIT" ? "" : "22"), color: pos === "SIT" ? "#8A8F98" : POS_COLOR[pos], fontWeight: 700, borderRadius: 5, padding: "2px 5px", fontSize: 11 }}>{pos}</span>
                       ) : ""}
@@ -889,6 +920,7 @@ function PlayerDetail({ player, games, roster, battingRow, onUploadPhoto }) {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );
