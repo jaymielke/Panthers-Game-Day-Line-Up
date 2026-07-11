@@ -12,11 +12,20 @@ export default async function handler(req, res) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const table = $("table").first();
-    if (table.length === 0) throw new Error("Couldn't find a standings table on the league page.");
+    let table = null;
+    $("table").each((_, el) => {
+      const headers = $(el).find("th").map((__, th) => $(th).text().trim().toLowerCase()).get();
+      if (headers.includes("team") && headers.includes("gp")) {
+        table = $(el);
+        return false;
+      }
+    });
+    if (!table) throw new Error("Couldn't find the standings table on the league page — its layout may have changed.");
 
     const teams = [];
-    table.find("tbody tr").each((_, tr) => {
+    let rows = table.find("tbody tr");
+    if (rows.length === 0) rows = table.find("tr").filter((__, tr) => $(tr).find("th").length === 0);
+    rows.each((_, tr) => {
       const cells = $(tr).find("td");
       if (cells.length === 0) return;
       const teamCell = $(cells[0]);
@@ -39,4 +48,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: (e && e.message) || String(e) });
   }
 }
-
