@@ -5,15 +5,31 @@ import App from "./PanthersTracker";
 const NAVY = "#000000";
 const BLUE = "#5F8DB5";
 
+// Flip to true to bring back the sign-in screen. While false, the app signs in
+// anonymously behind the scenes so Supabase's row-level security still works —
+// requires "Allow anonymous sign-ins" turned on in Supabase (Authentication > Sign In / Providers).
+const REQUIRE_LOGIN = false;
+
 export default function AuthApp() {
   const [session, setSession] = useState(undefined);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [anonError, setAnonError] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) { setSession(data.session); return; }
+      if (!REQUIRE_LOGIN) {
+        supabase.auth.signInAnonymously().then(({ data, error }) => {
+          if (error) { setAnonError(error.message); setSession(null); }
+          else setSession(data.session);
+        });
+      } else {
+        setSession(null);
+      }
+    });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -39,7 +55,16 @@ export default function AuthApp() {
     );
   }
 
-  if (!session) {
+  if (!session && !REQUIRE_LOGIN) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "'Inter', sans-serif", color: NAVY, padding: 20, textAlign: "center" }}>
+        <div>Couldn't connect to the database.</div>
+        {anonError && <div style={{ fontSize: 12.5, color: "#8A8F98", maxWidth: 420 }}>{anonError} — make sure "Allow anonymous sign-ins" is turned on in Supabase under Authentication → Sign In / Providers.</div>}
+      </div>
+    );
+  }
+
+  if (!session && REQUIRE_LOGIN) {
     return (
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center", height: "100vh",
@@ -81,5 +106,5 @@ export default function AuthApp() {
     );
   }
 
-  return <App onSignOut={handleSignOut} />;
+  return <App onSignOut={REQUIRE_LOGIN ? handleSignOut : null} />;
 }
