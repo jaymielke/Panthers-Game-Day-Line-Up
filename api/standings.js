@@ -24,19 +24,18 @@ export default async function handler(req, res) {
 
     const teams = [];
     let rows = table.find("tbody tr");
-    if (rows.length === 0) rows = table.find("tr").filter((__, tr) => $(tr).find("th").length === 0);
+    if (rows.length === 0) rows = table.find("tr").filter((__, tr) => $(tr).find("td").length > 0);
     rows.each((_, tr) => {
-      const cells = $(tr).find("td");
+      const cells = $(tr).children(); // team name cell may be a <th> row-header, stats are <td> — grab all direct children in order
       if (cells.length === 0) return;
       const teamCell = $(cells[0]);
       const name = teamCell.find("a").first().text().trim() || teamCell.text().trim();
       if (!name) return;
       const row = { team: name };
-      cells.each((idx, td) => {
-        if (idx === 0) return;
+      for (let idx = 1; idx < cells.length; idx++) {
         const key = KEYS[idx - 1];
-        if (key) row[key] = $(td).text().trim();
-      });
+        if (key) row[key] = $(cells[idx]).text().trim();
+      }
       teams.push(row);
     });
 
