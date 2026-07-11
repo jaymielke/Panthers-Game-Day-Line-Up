@@ -937,12 +937,28 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          {(r.if + r.of) > 0 && (() => {
+            const ifPct = Math.round((r.if / (r.if + r.of)) * 100);
+            const ofPct = 100 - ifPct;
+            return (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ display: "flex", height: 10, width: "100%", borderRadius: 5, overflow: "hidden", background: "#E2E2E2" }}>
+                  <div style={{ width: `${ifPct}%`, background: BLUE }} title={`Infield ${ifPct}%`} />
+                  <div style={{ width: `${ofPct}%`, background: FIELD_GREEN }} title={`Outfield ${ofPct}%`} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 11, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>
+                  <span style={{ color: BLUE }}>IF {ifPct}%</span>
+                  <span style={{ color: FIELD_GREEN }}>OF {ofPct}%</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
         <div style={{ flex: "2 1 380px", minWidth: 320 }}>
-          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line</div>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>Batting Line - Regular Season Statistics Only</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
             {battingFieldsRow1.map(battingChip)}
           </div>
