@@ -64,6 +64,8 @@ const INK = "#000000";
 const RED = "#000000";
 const AMBER = BLUE_DK;
 const GREENOK = BLUE;
+const CARD_GOLD = "#C9A227";
+const CARD_INK = "#0B1420";
 
 const POS_COLOR = {
   P: "#000000", C: "#262626", "1B": "#404040", "2B": "#595959", "3B": "#737373", SS: "#8C8C8C",
@@ -821,7 +823,7 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
     const isAvgStat = k === "AVG" || k === "OBP" || k === "OPS" || k === "SLG";
     const v = b ? (isAvgStat ? fmtAvg(b[k]) : (b[k] != null ? b[k] : 0)) : (isAvgStat ? fmtAvg(0) : 0);
     return (
-      <div key={k} style={{ background: PAPER, borderRadius: 8, padding: "8px 12px", minWidth: 56, textAlign: "center" }}>
+      <div key={k} style={{ background: "#F4F6F8", borderTop: `3px solid ${BLUE}`, borderRadius: "0 0 8px 8px", padding: "7px 12px", minWidth: 56, textAlign: "center" }}>
         <div style={{ fontSize: 10, color: "#8A8F98", textTransform: "uppercase", fontWeight: 700 }}>{k}</div>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 17, color: NAVY, fontWeight: 600 }}>{v}</div>
       </div>
@@ -836,48 +838,63 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
         </button>
       </div>
       <div ref={captureRef}>
-      <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginBottom: 18 }}>
-        <div style={{ position: "relative", width: 256, height: 256, flexShrink: 0 }}>
+      <div style={{ position: "relative", height: 210, borderRadius: 10, overflow: "hidden", marginBottom: 18, background: CARD_INK }}>
+        <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "72%", background: BLUE, clipPath: "polygon(18% 0, 100% 0, 100% 100%, 0% 100%)" }} />
+        <div aria-hidden="true" style={{ position: "absolute", right: 10, bottom: -34, fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 190, color: BLUE_DK, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
+          {(player.jersey || "").replace("#", "")}
+        </div>
+        <div style={{ position: "absolute", top: 14, right: -38, transform: "rotate(45deg)", background: CARD_GOLD, color: "#3A2E05", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: "0.08em", padding: "3px 44px", textAlign: "center" }}>
+          2026 SEASON
+        </div>
+        <div style={{ position: "absolute", top: 14, left: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <img src={PANTHERS_LOGO} alt="" style={{ width: 26, height: 26, objectFit: "contain" }} />
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: "#fff", fontWeight: 800, fontSize: 13, letterSpacing: "0.06em", lineHeight: 1.25 }}>
+            KITCHENER<br /><span style={{ color: BLUE }}>PANTHERS</span>
+          </div>
+        </div>
+
+        <div style={{ position: "absolute", left: 16, bottom: 16, width: 96, height: 96 }}>
           {player.photoUrl ? (
-            <img src={player.photoUrl} alt={player.name} style={{ width: 256, height: 256, borderRadius: "50%", objectFit: "cover" }} />
+            <img src={player.photoUrl} alt={player.name} style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", border: "4px solid #fff" }} />
           ) : (
-            <div style={{ width: 256, height: 256, borderRadius: "50%", background: PAPER, border: `2px dashed #D5D5D5`, display: "flex", alignItems: "center", justifyContent: "center", color: "#B0B5BC", fontFamily: "'Oswald', sans-serif", fontSize: 64, fontWeight: 700 }}>
+            <div style={{ width: 96, height: 96, borderRadius: "50%", background: CARD_INK, border: "4px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", color: BLUE, fontFamily: "'Oswald', sans-serif", fontSize: 30, fontWeight: 700 }}>
               {player.name.split(" ").map((w) => w[0]).join("")}
             </div>
           )}
           {onUploadPhoto && (
             <button className="no-print" onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} title="Upload photo" style={{
-              position: "absolute", bottom: 10, right: 10, width: 40, height: 40, borderRadius: "50%", background: BLUE, border: "3px solid #fff",
-              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff"
+              position: "absolute", bottom: -4, right: -4, width: 32, height: 32, borderRadius: "50%", background: CARD_GOLD, border: "3px solid #fff",
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: CARD_INK
             }}>
-              {uploading ? <Loader2 size={18} className="spin" /> : <PlusCircle size={18} />}
+              {uploading ? <Loader2 size={14} className="spin" /> : <PlusCircle size={14} />}
             </button>
           )}
           <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoChange} className="no-print" />
         </div>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-            <img src={PANTHERS_LOGO} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", color: GOLD, fontWeight: 700, letterSpacing: "0.08em", fontSize: 13 }}>{player.jersey} · KITCHENER PANTHERS</div>
-          </div>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 34, color: NAVY, fontWeight: 700, marginBottom: 10 }}>{player.name}</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <BalanceChip dev={r.deviation} balance={r.balance} />
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
-              {r.gamesPlayed}/{regularGames.length} games played ({attendancePct}%)
-            </span>
-            {primaryPos && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
-                Primary position: {primaryPos}
-              </span>
-            )}
-            {playerMvpCount > 0 && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#000", color: "#fff", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
-                <Trophy size={12} color={GOLD} /> {playerMvpCount} MVP award{playerMvpCount > 1 ? "s" : ""} this season
-              </span>
-            )}
+
+        <div style={{ position: "absolute", left: 128, bottom: 20, right: 16 }}>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 32, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{player.name}</div>
+          <div style={{ color: CARD_GOLD, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginTop: 6, textTransform: "uppercase" }}>
+            {player.jersey} · {primaryPos ? POS_LABELS[primaryPos] : "Panthers"}
           </div>
         </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18, alignItems: "center" }}>
+        <BalanceChip dev={r.deviation} balance={r.balance} />
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+          {r.gamesPlayed}/{regularGames.length} games played ({attendancePct}%)
+        </span>
+        {primaryPos && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: PAPER, color: "#5A5F66", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+            Primary position: {primaryPos}
+          </span>
+        )}
+        {playerMvpCount > 0 && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: CARD_INK, color: CARD_GOLD, padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12.5, fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <Trophy size={12} color={CARD_GOLD} /> {playerMvpCount} MVP award{playerMvpCount > 1 ? "s" : ""} this season
+          </span>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
@@ -962,7 +979,7 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
         </div>
       </div>
 
-      <div style={{ marginTop: 22, paddingTop: 14, borderTop: "1px solid #E7E7E7", textAlign: "center" }}>
+      <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${CARD_GOLD}`, textAlign: "center" }}>
         <div style={{ fontSize: 11, color: "#B0B5BC" }}>
           Kitchener Panthers · 2026 U8 Tier 1 · Statistics reflect regular season games only, as of {exportDate}.
         </div>
