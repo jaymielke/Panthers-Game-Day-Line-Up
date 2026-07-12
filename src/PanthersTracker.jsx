@@ -252,12 +252,12 @@ function parseGameChangerCSV(text) {
 const BAT_FIELDS = { GP: "gp", AB: "ab", H: "h", "1B": "b1", "2B": "b2", "3B": "b3", HR: "hr", RBI: "rbi", R: "r", SO: "so", FC: "fc" };
 
 function battingRowFromDb(row) {
-  const out = { jersey: row.jersey, name: row.player_name };
+  const out = { jersey: row.jersey, name: row.player_name, gameType: row.game_type || "Regular Season" };
   Object.entries(BAT_FIELDS).forEach(([jsKey, dbKey]) => { out[jsKey] = row[dbKey] || 0; });
   return out;
 }
 function battingRowToDb(row) {
-  const out = { player_name: row.name, jersey: row.jersey };
+  const out = { player_name: row.name, jersey: row.jersey, game_type: row.gameType || "Regular Season" };
   Object.entries(BAT_FIELDS).forEach(([jsKey, dbKey]) => { out[dbKey] = Number(row[jsKey]) || 0; });
   return out;
 }
@@ -304,7 +304,7 @@ async function deleteGameRow(gameNum) {
 async function saveBatting(batting) {
   try {
     const rows = batting.map(battingRowToDb);
-    const { error } = await supabase.from("batting_stats").upsert(rows, { onConflict: "player_name" });
+    const { error } = await supabase.from("batting_stats").upsert(rows, { onConflict: "player_name,game_type" });
     if (error) throw error;
     return true;
   } catch (e) { console.error(e); return false; }
@@ -591,15 +591,17 @@ function PlayerLink({ name, onViewPlayer, children, style }) {
 
 function DashboardTab({ games, batting, roster, onViewPlayer }) {
   const [typeFilter, setTypeFilter] = useState(["Regular Season"]);
+  const [battingType, setBattingType] = useState("Regular Season");
   const filteredGames = useMemo(
     () => games.filter((g) => typeFilter.includes(g.gameType || "Regular Season")),
     [games, typeFilter]
   );
   const { rows: fielding, meanBalance } = useMemo(() => computeFielding(filteredGames, roster), [filteredGames, roster]);
+  const battingForType = useMemo(() => batting.filter((b) => (b.gameType || "Regular Season") === battingType), [batting, battingType]);
   const battingCalc = useMemo(() => {
     const photoByName = Object.fromEntries(roster.map((p) => [p.name, p.photoUrl]));
-    return computeBatting(batting).map((p) => ({ ...p, photoUrl: photoByName[p.name] || null })).sort((a, b) => b.AVG - a.AVG);
-  }, [batting, roster]);
+    return computeBatting(battingForType).map((p) => ({ ...p, photoUrl: photoByName[p.name] || null })).sort((a, b) => b.AVG - a.AVG);
+  }, [battingForType, roster]);
   const [sortKey, setSortKey] = useState("AVG");
   const [sortDir, setSortDir] = useState(-1);
   const [fieldSortKey, setFieldSortKey] = useState("jerseyNum");
@@ -790,7 +792,18 @@ function DashboardTab({ games, batting, roster, onViewPlayer }) {
       </div>
 
       <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
-        <SectionHeading icon={TrendingUp}>Batting Summary</SectionHeading>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 4 }}>
+          <SectionHeading icon={TrendingUp}>Batting Summary</SectionHeading>
+          <div style={{ display: "flex", background: "#F0F0F0", borderRadius: 8, padding: 3 }}>
+            {GAME_TYPES.map((t) => (
+              <button key={t} onClick={() => setBattingType(t)} style={{
+                background: battingType === t ? "#0B1420" : "transparent", color: battingType === t ? "#fff" : "#8A8F98",
+                fontSize: 11.5, fontWeight: 700, padding: "5px 14px", borderRadius: 6, border: "none", cursor: "pointer",
+                fontFamily: "'Barlow Condensed', sans-serif",
+              }}>{t}</button>
+            ))}
+          </div>
+        </div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 900 }}>
           <thead>
             <tr style={{ textAlign: "right", color: "#8A8F98", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -854,6 +867,15 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
 
   const posBarData = ALL_POS.map((pos) => ({ pos, innings: r.posCounts[pos] || 0 })).filter((d) => d.innings > 0);
   const b = battingRow ? computeBatting([battingRow])[0] : null;
+  const otherBattingByType = useMemo(() => {
+    const out = {};
+    (batting || []).forEach((row) => {
+      if (row.name !== player.name) return;
+      const t = row.gameType || "Regular Season";
+      if (t !== "Regular Season") out[t] = row;
+    });
+    return out;
+  }, [batting, player.name]);
   const [uploading, setUploading] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const fileInputRef = React.useRef(null);
@@ -1055,9 +1077,33 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
             {battingFieldsRow1.map(battingChip)}
           </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
             {battingFieldsRow2.map(battingChip)}
           </div>
+          {[
+            { type: "Exhibition", label: "EXHIBITION", accent: CARD_GOLD, accentDk: "#3A2E05", border: "#D9C27A", bg: "#FBF7EC", sub: "#8A7A45" },
+            { type: "Tournament", label: "TOURNAMENT", accent: BLUE_DK, accentDk: "#fff", border: "#8AACC7", bg: "#EFF4F8", sub: "#5A7A93" },
+          ].map(({ type, label, accent, accentDk, border, bg, sub }) => {
+            const row = otherBattingByType[type];
+            if (!row) return null;
+            const stats = computeBatting([row])[0];
+            return (
+              <div key={type} style={{ border: `1.5px dashed ${border}`, borderRadius: 8, padding: "10px 12px", background: bg, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+                  <span style={{ background: accent, color: accentDk, fontSize: 9.5, fontWeight: 800, letterSpacing: "0.04em", padding: "2px 8px", borderRadius: 999 }}>{label}</span>
+                  <span style={{ fontSize: 10.5, color: sub }}>not counted in season stats above</span>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {["GP", "AVG", "AB", "H", "RBI", "R"].map((k) => (
+                    <div key={k} style={{ background: "#fff", borderRadius: 6, padding: "5px 10px" }}>
+                      <div style={{ fontSize: 8.5, color: "#8A8F98", fontWeight: 700 }}>{k}</div>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 13, fontWeight: 600 }}>{k === "AVG" ? fmtAvg(stats.AVG) : stats[k]}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div style={{ flex: "1 1 220px", minWidth: 200 }}>
           <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", marginBottom: 8, fontWeight: 600 }}>What the abbreviations mean</div>
@@ -1114,7 +1160,7 @@ function PlayerDetail({ player, games, roster, batting, battingRow, mvpAwards, o
 function PlayersTab({ games, batting, roster, mvpAwards, onUploadPhoto, initialPlayerName, onConsumeInitialPlayer }) {
   const [selected, setSelected] = useState(null);
   const { rows: fielding } = useMemo(() => computeFielding(games, roster), [games, roster]);
-  const battingByName = useMemo(() => Object.fromEntries(batting.map((b) => [b.name, b])), [batting]);
+  const battingByName = useMemo(() => Object.fromEntries(batting.filter((b) => (b.gameType || "Regular Season") === "Regular Season").map((b) => [b.name, b])), [batting]);
 
   useEffect(() => {
     if (initialPlayerName) {
@@ -1946,10 +1992,11 @@ const primaryBtnStyle = { display: "flex", alignItems: "center", gap: 6, backgro
 /* ======================== BATTING TAB ======================== */
 
 function BattingTab({ batting, roster, onSave }) {
+  const [battingType, setBattingType] = useState("Regular Season");
   const orderedSeed = useMemo(() => {
-    const byName = Object.fromEntries(batting.map((b) => [b.name, b]));
-    return roster.map((p) => byName[p.name] || blankBattingRow(p));
-  }, [batting, roster]);
+    const byName = Object.fromEntries(batting.filter((b) => (b.gameType || "Regular Season") === battingType).map((b) => [b.name, b]));
+    return roster.map((p) => byName[p.name] || { ...blankBattingRow(p), gameType: battingType });
+  }, [batting, roster, battingType]);
   const [rows, setRows] = useState(orderedSeed);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -2002,8 +2049,17 @@ function BattingTab({ batting, roster, onSave }) {
     <div>
       <SectionHeading icon={TrendingUp}>Batting Stats</SectionHeading>
       <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflowX: "auto" }}>
+        <div style={{ display: "flex", background: "#F0F0F0", borderRadius: 8, padding: 3, marginBottom: 14, width: "fit-content" }}>
+          {GAME_TYPES.map((t) => (
+            <button key={t} onClick={() => setBattingType(t)} style={{
+              background: battingType === t ? "#0B1420" : "transparent", color: battingType === t ? "#fff" : "#8A8F98",
+              fontSize: 11.5, fontWeight: 700, padding: "5px 14px", borderRadius: 6, border: "none", cursor: "pointer",
+              fontFamily: "'Barlow Condensed', sans-serif",
+            }}>{t}</button>
+          ))}
+        </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
-          <div style={{ fontSize: 12.5, color: "#8A8F98", maxWidth: 480 }}>Enter season totals from your GameChanger export, or import the CSV directly below. AVG / OBP / SLG / OPS calculate automatically.</div>
+          <div style={{ fontSize: 12.5, color: "#8A8F98", maxWidth: 480 }}>Enter {battingType.toLowerCase()} totals from your GameChanger export, or import the CSV directly below. AVG / OBP / SLG / OPS calculate automatically. These stats are kept completely separate from the other game types.</div>
           <div>
             <button onClick={handleImportClick} style={ghostBtnStyle}><PlusCircle size={14} /> Import GameChanger CSV</button>
             <input ref={fileInputRef} type="file" accept=".csv" style={{ display: "none" }} onChange={handleFileChange} />
@@ -2111,7 +2167,14 @@ export default function App({ onSignOut }) {
 
   const handleSaveBatting = useCallback(async (updated) => {
     const ok = await saveBatting(updated);
-    if (ok) setBatting(updated);
+    if (ok) {
+      setBatting((prev) => {
+        const key = (r) => `${r.name}::${r.gameType || "Regular Season"}`;
+        const updatedKeys = new Set(updated.map(key));
+        const kept = prev.filter((r) => !updatedKeys.has(key(r)));
+        return [...kept, ...updated];
+      });
+    }
     return ok;
   }, []);
 
