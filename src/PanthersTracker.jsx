@@ -1983,18 +1983,21 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
                       const used = usedInInning(i, p.name);
                       const sitCount = sitCountInInning(i, p.name);
                       const sitMaxedOut = sitCount >= maxSitPerInning && val !== "SIT";
+                      const cs = val ? chipStyle(val) : null;
                       return (
                         <td key={i} style={{ padding: "3px" }}>
                           <select value={val || ""} disabled={isAbsent} onChange={(e) => updatePos(p.name, i, e.target.value)}
                             style={{
-                              width: 58, padding: "3px 2px", borderRadius: 5, border: "1px solid #D5D5D5", fontSize: 12,
-                              background: isAbsent ? "#EDEDED" : val ? (POS_COLOR[val] || SIT_GRAY) + "22" : "#fff",
-                              color: isAbsent ? "#B0B5BC" : "inherit", cursor: isAbsent ? "not-allowed" : "pointer"
+                              width: 58, padding: "3px 2px", borderRadius: 5, fontSize: 12, fontWeight: cs ? 700 : 400,
+                              border: isAbsent ? "1px solid #D5D5D5" : cs ? cs.border : "1px solid #D5D5D5",
+                              background: isAbsent ? "#EDEDED" : cs ? cs.background : "#fff",
+                              color: isAbsent ? "#B0B5BC" : cs ? cs.color : "inherit",
+                              cursor: isAbsent ? "not-allowed" : "pointer"
                             }}>
                             {POS_OPTIONS.map((o) => {
                               const disabledOpt = o !== "" && ((o !== "SIT" && used.has(o)) || (o === "SIT" && sitMaxedOut));
                               return (
-                                <option key={o} value={o} disabled={disabledOpt} style={{ color: disabledOpt ? "#C7C7C7" : "inherit" }}>
+                                <option key={o} value={o} disabled={disabledOpt} style={{ color: disabledOpt ? "#C7C7C7" : "#000", background: "#fff" }}>
                                   {o || "—"}{o && o !== "SIT" && used.has(o) ? " (taken)" : ""}{o === "SIT" && sitMaxedOut ? " (max)" : ""}
                                 </option>
                               );
