@@ -35,11 +35,11 @@ const SCHEDULE = [
   { id: "8UT1-097", date: "Jul 6", time: "6:00 PM", home: false, opponent: "Cambridge Cubs 2", venue: "Waterworks Park (1)", teamScore: 20, oppScore: 10 },
   { id: "8UT1-100", date: "Jul 9", time: "6:00 PM", home: false, opponent: "Stratford Nationals", venue: "Optimist Park", teamScore: 25, oppScore: 21 },
   { id: "8UT1-102", date: "Jul 10", time: "6:00 PM", home: false, opponent: "Brantford Red Sox", venue: "Cockshutt Park (Baker Yellow)", teamScore: 19, oppScore: 5 },
-  { id: "8UT1-107", date: "Jul 13", time: "6:00 PM", home: true, opponent: "Woodstock Wranglers", venue: "Rosenburg (D2)", teamScore: null, oppScore: null },
-  { id: "8UT1-115", date: "Jul 20", time: "6:00 PM", home: true, opponent: "Cambridge Cubs 2", venue: "Rosenburg (D2)", teamScore: null, oppScore: null },
-  { id: "8UT1-123", date: "Jul 26", time: "5:00 PM", home: false, opponent: "Guelph Royals \"Black\"", venue: "Lyon Park (2)", teamScore: null, oppScore: null },
-  { id: "8UT1-128", date: "Jul 27", time: "6:00 PM", home: true, opponent: "Cambridge Cubs 1", venue: "Rosenburg (D2)", teamScore: null, oppScore: null },
-  { id: "8UT1-131", date: "Jul 30", time: "6:00 PM", home: false, opponent: "Waterloo Tigers 1", venue: "Regency", teamScore: null, oppScore: null },
+  { id: "8UT1-107", date: "Jul 13", time: "6:00 PM", home: true, opponent: "Woodstock Wranglers", venue: "Rosenburg (D2)", teamScore: 1, oppScore: 21 },
+  { id: "8UT1-115", date: "Jul 20", time: "6:00 PM", home: true, opponent: "Cambridge Cubs 2", venue: "Rosenburg (D2)", teamScore: 22, oppScore: 7 },
+  { id: "8UT1-128", date: "Jul 27", time: "6:00 PM", home: true, opponent: "Cambridge Cubs 1", venue: "Rosenburg (D2)", teamScore: 7, oppScore: 19 },
+  { id: "8UT1-123", date: "Jul 29", time: "6:00 PM", home: false, opponent: "Guelph Royals \"Black\"", venue: "Riverside (2)", teamScore: 10, oppScore: 18 },
+  { id: "8UT1-131", date: "Jul 30", time: "6:00 PM", home: false, opponent: "Waterloo Tigers 1", venue: "Regency", teamScore: 7, oppScore: 17 },
 ];
 
 function scheduleRecord(schedule) {
