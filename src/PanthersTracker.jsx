@@ -263,11 +263,12 @@ function battingRowToDb(row) {
 }
 
 async function loadData() {
-  const [gamesRes, battingRes, playersRes, mvpRes] = await Promise.all([
+  const [gamesRes, battingRes, playersRes, mvpRes, depthRes] = await Promise.all([
     supabase.from("games").select("*").order("game_num", { ascending: true }),
     supabase.from("batting_stats").select("*"),
     supabase.from("players").select("*").order("sort_order", { ascending: true }),
     supabase.from("mvp_awards").select("*").order("awarded_at", { ascending: true }),
+    supabase.from("depth_chart").select("*").eq("id", 1).maybeSingle(),
   ]);
 
   const games = (gamesRes.data || []).map((g) => ({
@@ -280,8 +281,9 @@ async function loadData() {
     id: a.id, name: a.player_name, context: a.context, gameNum: a.game_num,
     practiceDate: a.practice_date, gameLabel: a.game_label, awardedAt: a.awarded_at,
   }));
+  const depthChart = (depthRes.data && depthRes.data.chart) || {};
 
-  return { games, batting, roster, mvpAwards };
+  return { games, batting, roster, mvpAwards, depthChart };
 }
 
 async function saveGames(games) {
@@ -314,6 +316,14 @@ async function saveRosterOrder(roster) {
   try {
     const updates = roster.map((p, i) => supabase.from("players").update({ sort_order: i }).eq("id", p.id));
     await Promise.all(updates);
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+
+async function saveDepthChart(chart) {
+  try {
+    const { error } = await supabase.from("depth_chart").upsert({ id: 1, chart }, { onConflict: "id" });
+    if (error) throw error;
     return true;
   } catch (e) { console.error(e); return false; }
 }
@@ -493,7 +503,7 @@ function StandingsSection() {
   );
 }
 
-function TeamLeadersSection({ battingCalc, fielding, onViewPlayer }) {
+function TeamLeadersSection({ battingCalc, fielding, onViewPlayer, minGames = 0, totalGames = 0 }) {
   const enriched = useMemo(() => battingCalc.map((p) => ({
     ...p,
     photoUrl: p.photoUrl,
@@ -501,7 +511,7 @@ function TeamLeadersSection({ battingCalc, fielding, onViewPlayer }) {
   })), [battingCalc, fielding]);
 
   function rankedBy(key) {
-    return [...enriched].filter((p) => p.AB > 0 || key === "SO").sort((a, b) => (b[key] || 0) - (a[key] || 0));
+    return [...enriched].filter((p) => (p.AB > 0 || key === "SO") && (p.GP || 0) >= minGames).sort((a, b) => (b[key] || 0) - (a[key] || 0));
   }
 
   const groups = [
@@ -513,10 +523,15 @@ function TeamLeadersSection({ battingCalc, fielding, onViewPlayer }) {
 
   return (
     <div style={{ background: "#000", borderRadius: 12, padding: 20, marginTop: 24 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <Trophy size={18} color={GOLD} />
         <div style={{ color: "#fff", fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 20 }}>Team Leaders</div>
       </div>
+      {minGames > 0 && (
+        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginBottom: 16 }}>
+          Players must have played in at least {minGames} of {totalGames} games ({"\u2265"}50%) to qualify for the leaderboard.
+        </div>
+      )}
       {groups.map((row, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
           {row.map((s) => <StatLeaderCard key={s.key} label={s.label} statKey={s.key} fmt={s.fmt} ranked={rankedBy(s.key)} onViewPlayer={onViewPlayer} />)}
@@ -602,6 +617,8 @@ function DashboardTab({ games, batting, roster, onViewPlayer }) {
     const photoByName = Object.fromEntries(roster.map((p) => [p.name, p.photoUrl]));
     return computeBatting(battingForType).map((p) => ({ ...p, photoUrl: photoByName[p.name] || null })).sort((a, b) => b.AVG - a.AVG);
   }, [battingForType, roster]);
+  const totalGamesForType = useMemo(() => games.filter((g) => (g.gameType || "Regular Season") === battingType).length, [games, battingType]);
+  const minLeaderGames = Math.ceil(totalGamesForType * 0.5);
   const [sortKey, setSortKey] = useState("AVG");
   const [sortDir, setSortDir] = useState(-1);
   const [fieldSortKey, setFieldSortKey] = useState("jerseyNum");
@@ -846,7 +863,7 @@ function DashboardTab({ games, batting, roster, onViewPlayer }) {
         </table>
       </div>
 
-      <TeamLeadersSection battingCalc={battingCalc} fielding={fielding} onViewPlayer={onViewPlayer} />
+      <TeamLeadersSection battingCalc={battingCalc} fielding={fielding} onViewPlayer={onViewPlayer} minGames={minLeaderGames} totalGames={totalGamesForType} />
       <StandingsSection />
     </div>
   );
@@ -1587,7 +1604,113 @@ function LineupCard({ draft, roster }) {
 }
 
 
-function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRoster }) {
+/* ======================== DEPTH CHART PANEL ======================== */
+
+const DEPTH_CHART_GROUPS = [
+  { title: "Outfield", positions: ["LF", "LC", "RC", "RF"] },
+  { title: "Infield", positions: ["SS", "2B", "3B", "1B"] },
+  { title: "Battery", positions: ["P", "C"] },
+];
+const DEPTH_SLOTS = 3;
+
+function DepthChartPanel({ roster, depthChart, onSaveDepthChart }) {
+  const [chart, setChart] = useState(() => {
+    const c = {};
+    ALL_POS.forEach((pos) => { c[pos] = (depthChart[pos] || []).slice(0, DEPTH_SLOTS); while (c[pos].length < DEPTH_SLOTS) c[pos].push(""); });
+    return c;
+  });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    const c = {};
+    ALL_POS.forEach((pos) => { c[pos] = (depthChart[pos] || []).slice(0, DEPTH_SLOTS); while (c[pos].length < DEPTH_SLOTS) c[pos].push(""); });
+    setChart(c);
+  }, [depthChart]);
+
+  function setSlot(pos, slotIdx, name) {
+    setChart((c) => ({ ...c, [pos]: c[pos].map((n, i) => (i === slotIdx ? name : n)) }));
+  }
+  function moveSlot(pos, slotIdx, dir) {
+    setChart((c) => {
+      const arr = [...c[pos]];
+      const target = slotIdx + dir;
+      if (target < 0 || target >= arr.length) return c;
+      [arr[slotIdx], arr[target]] = [arr[target], arr[slotIdx]];
+      return { ...c, [pos]: arr };
+    });
+  }
+
+  async function handleSaveChart() {
+    setSaving(true);
+    const cleaned = {};
+    ALL_POS.forEach((pos) => { cleaned[pos] = chart[pos].filter((n) => n); });
+    const ok = await onSaveDepthChart(cleaned);
+    setMsg(ok ? "Depth chart saved." : "Something went wrong saving.");
+    setSaving(false);
+    setTimeout(() => setMsg(""), 2500);
+  }
+
+  function PositionBox({ pos }) {
+    const color = POS_COLOR[pos] || SIT_GRAY;
+    return (
+      <div style={{ background: "#fff", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflow: "hidden", minWidth: 190, flex: "1 1 190px" }}>
+        <div style={{ background: color, color: "#fff", padding: "6px 12px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.04em" }}>
+          {pos} <span style={{ opacity: 0.75, fontWeight: 600 }}>&middot; {POS_LABELS[pos]}</span>
+        </div>
+        <div style={{ padding: 8 }}>
+          {chart[pos].map((name, slotIdx) => (
+            <div key={slotIdx} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+              <span style={{ fontSize: 10.5, color: "#8A8F98", fontWeight: 700, width: 12, textAlign: "center" }}>{slotIdx + 1}</span>
+              <select value={name} onChange={(e) => setSlot(pos, slotIdx, e.target.value)} style={{
+                flex: 1, padding: "4px 4px", borderRadius: 5, border: "1px solid #D5D5D5", fontSize: 12,
+                background: name ? color + "18" : "#fff", cursor: "pointer",
+              }}>
+                <option value="">—</option>
+                {roster.map((p) => (
+                  <option key={p.name} value={p.name} disabled={chart[pos].some((n, i) => n === p.name && i !== slotIdx)}>
+                    {p.jersey} {p.name}
+                  </option>
+                ))}
+              </select>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <button onClick={() => moveSlot(pos, slotIdx, -1)} disabled={slotIdx === 0} style={arrowBtnStyle}><ChevronUp size={11} /></button>
+                <button onClick={() => moveSlot(pos, slotIdx, 1)} disabled={slotIdx === DEPTH_SLOTS - 1} style={arrowBtnStyle}><ChevronDown size={11} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 4 }}>
+        <SectionHeading icon={LayoutDashboard}>Player Depth Chart</SectionHeading>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {msg && <span style={{ fontSize: 12.5, color: msg.includes("saved") ? GREENOK : "#000" }}>{msg}</span>}
+          <button onClick={handleSaveChart} disabled={saving} style={primaryBtnStyle}>
+            {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} Save Depth Chart
+          </button>
+        </div>
+      </div>
+      <div style={{ fontSize: 12, color: "#8A8F98", marginBottom: 14, maxWidth: 640 }}>
+        Rank who plays each position first, second, and third choice. This is a reference tool only — it doesn't automatically fill in a game's lineup, but makes it easy to check who should be considered for a spot while you're building one below.
+      </div>
+      {DEPTH_CHART_GROUPS.map((group) => (
+        <div key={group.title} style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8A8F98", fontWeight: 700, marginBottom: 8 }}>{group.title}</div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {group.positions.map((pos) => <PositionBox key={pos} pos={pos} />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRoster, depthChart, onSaveDepthChart }) {
   const nextNum = games.length ? Math.max(...games.map((g) => g.gameNum)) + 1 : 1;
   const [draft, setDraft] = useState(() => emptyGame(nextNum, roster));
   const [expanded, setExpanded] = useState(false);
@@ -1600,6 +1723,7 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
   const [newName, setNewName] = useState("");
   const [addErr, setAddErr] = useState("");
   const [showCards, setShowCards] = useState(false);
+  const [showDepthChart, setShowDepthChart] = useState(false);
   const [editingGameNum, setEditingGameNum] = useState(null);
   const [exportingPdf, setExportingPdf] = useState(false);
   const cardsCaptureRef = React.useRef(null);
@@ -1677,6 +1801,20 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
       if (val && val !== "SIT") used.add(val);
     });
     return used;
+  }
+
+  const activePlayerCount = roster.filter((p) => !(draft.players[p.name] && draft.players[p.name].absent)).length;
+  const maxSitPerInning = Math.max(0, activePlayerCount - 10);
+
+  function sitCountInInning(inningIdx, excludeName) {
+    let count = 0;
+    roster.forEach((p) => {
+      if (p.name === excludeName) return;
+      const entry = draft.players[p.name];
+      if (!entry || entry.absent) return;
+      if (entry.positions[inningIdx] === "SIT") count += 1;
+    });
+    return count;
   }
 
   async function handleSave() {
@@ -1788,6 +1926,9 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
         <div style={{ fontSize: 11.5, color: "#8A8F98", marginBottom: 8 }}>
           Drag <GripVertical size={11} style={{ verticalAlign: "-2px" }} /> or use the arrows to set this game's batting order. It only affects this game — other games keep their own order. Positions already taken in an inning grey out for everyone else; SIT can be used by more than one player.
         </div>
+        <div style={{ fontSize: 11.5, color: NAVY, fontWeight: 600, marginBottom: 8, background: "#F4F6F8", display: "inline-block", padding: "4px 10px", borderRadius: 6 }}>
+          {activePlayerCount} active players &middot; max {maxSitPerInning} sit{maxSitPerInning === 1 ? "" : "s"} per inning
+        </div>
 
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 780 }}>
@@ -1826,6 +1967,8 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
                     <td style={{ padding: "5px 6px", fontWeight: 600, whiteSpace: "nowrap", opacity: isAbsent ? 0.45 : 1 }}>{p.jersey} {p.name}</td>
                     {positions.map((val, i) => {
                       const used = usedInInning(i, p.name);
+                      const sitCount = sitCountInInning(i, p.name);
+                      const sitMaxedOut = sitCount >= maxSitPerInning && val !== "SIT";
                       return (
                         <td key={i} style={{ padding: "3px" }}>
                           <select value={val || ""} disabled={isAbsent} onChange={(e) => updatePos(p.name, i, e.target.value)}
@@ -1834,11 +1977,14 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
                               background: isAbsent ? "#EDEDED" : val ? (POS_COLOR[val] || SIT_GRAY) + "22" : "#fff",
                               color: isAbsent ? "#B0B5BC" : "inherit", cursor: isAbsent ? "not-allowed" : "pointer"
                             }}>
-                            {POS_OPTIONS.map((o) => (
-                              <option key={o} value={o} disabled={o !== "" && o !== "SIT" && used.has(o)} style={{ color: used.has(o) ? "#C7C7C7" : "inherit" }}>
-                                {o || "—"}{o && o !== "SIT" && used.has(o) ? " (taken)" : ""}
-                              </option>
-                            ))}
+                            {POS_OPTIONS.map((o) => {
+                              const disabledOpt = o !== "" && ((o !== "SIT" && used.has(o)) || (o === "SIT" && sitMaxedOut));
+                              return (
+                                <option key={o} value={o} disabled={disabledOpt} style={{ color: disabledOpt ? "#C7C7C7" : "inherit" }}>
+                                  {o || "—"}{o && o !== "SIT" && used.has(o) ? " (taken)" : ""}{o === "SIT" && sitMaxedOut ? " (max)" : ""}
+                                </option>
+                              );
+                            })}
                           </select>
                         </td>
                       );
@@ -1891,6 +2037,9 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
           <button onClick={() => setShowCards((s) => !s)} style={ghostBtnStyle}>
             <Printer size={14} /> {showCards ? "Hide" : "Export"} Lineup Cards
           </button>
+          <button onClick={() => setShowDepthChart((s) => !s)} style={ghostBtnStyle}>
+            <LayoutDashboard size={14} /> {showDepthChart ? "Hide" : "Show"} Depth Chart
+          </button>
           {savedMsg && <span style={{ fontSize: 13, color: (savedMsg.includes("saved") || savedMsg.includes("updated")) ? GREENOK : "#000000" }}>{savedMsg}</span>}
         </div>
       </div>
@@ -1910,6 +2059,12 @@ function AddGameTab({ games, roster, onSave, onDelete, onAddPlayer, onReorderRos
               <LineupCard draft={draft} roster={roster} />
             </div>
           </div>
+        </div>
+      )}
+
+      {showDepthChart && (
+        <div style={{ marginBottom: 20 }}>
+          <DepthChartPanel roster={roster} depthChart={depthChart} onSaveDepthChart={onSaveDepthChart} />
         </div>
       )}
 
@@ -2139,6 +2294,7 @@ export default function App({ onSignOut }) {
   const [batting, setBatting] = useState(null);
   const [roster, setRoster] = useState(null);
   const [mvpAwards, setMvpAwards] = useState(null);
+  const [depthChart, setDepthChart] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [viewPlayerName, setViewPlayerName] = useState(null);
@@ -2149,10 +2305,16 @@ export default function App({ onSignOut }) {
   }, []);
 
   const refresh = useCallback(() => {
-    loadData().then(({ games, batting, roster, mvpAwards }) => { setGames(games); setBatting(batting); setRoster(roster); setMvpAwards(mvpAwards); });
+    loadData().then(({ games, batting, roster, mvpAwards, depthChart }) => { setGames(games); setBatting(batting); setRoster(roster); setMvpAwards(mvpAwards); setDepthChart(depthChart); });
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const handleSaveDepthChart = useCallback(async (chart) => {
+    const ok = await saveDepthChart(chart);
+    if (ok) setDepthChart(chart);
+    return ok;
+  }, []);
 
   const handleSaveGames = useCallback(async (updated) => {
     const ok = await saveGames(updated);
@@ -2303,7 +2465,7 @@ export default function App({ onSignOut }) {
         {tab === "dashboard" && <DashboardTab games={games} batting={batting} roster={roster} onViewPlayer={handleViewPlayer} />}
         {tab === "schedule" && <ScheduleTab />}
         {tab === "players" && <PlayersTab games={games} batting={batting} roster={roster} mvpAwards={mvpAwards} onUploadPhoto={handleUploadPhoto} initialPlayerName={viewPlayerName} onConsumeInitialPlayer={() => setViewPlayerName(null)} />}
-        {tab === "addgame" && <AddGameTab games={games} roster={roster} onSave={handleSaveGames} onDelete={handleDeleteGame} onAddPlayer={handleAddPlayer} onReorderRoster={handleReorderRoster} />}
+        {tab === "addgame" && <AddGameTab games={games} roster={roster} onSave={handleSaveGames} onDelete={handleDeleteGame} onAddPlayer={handleAddPlayer} onReorderRoster={handleReorderRoster} depthChart={depthChart || {}} onSaveDepthChart={handleSaveDepthChart} />}
         {tab === "batting" && <BattingTab batting={batting} roster={roster} onSave={handleSaveBatting} />}
         {tab === "mvp" && <MvpTab games={games} roster={roster} mvpAwards={mvpAwards} onAward={handleAwardMvp} onRemoveAward={handleRemoveMvpAward} />}
       </div>
